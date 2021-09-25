@@ -3,7 +3,6 @@ from django.shortcuts import render
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
 from . import forms
 from django.views.generic import TemplateView, CreateView
 from django.contrib.auth.forms import UserCreationForm
