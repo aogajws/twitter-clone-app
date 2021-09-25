@@ -1,19 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>トップページ</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-    <p>トップページ</p>
-    {% if request.user.is_authenticated  %}
-        <p>ログインしました．</p>
-        <p>こんにちは，{{ user.username }}さん</p>
-        <a href="{% url 'logout' %}">ログアウト</a>
-    {% else %}
-        <a href="{% url 'login' %}">ログイン</a>
-        <a href="{% url 'create' %}">アカウント作成</a>
-    {% endif %}
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}メインページ{% endblock title %}
+{% block content %}
+    <h1>メインページ</h1>
+{% endblock %}
