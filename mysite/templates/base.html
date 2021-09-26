@@ -12,7 +12,7 @@
         <div class="navbar" id="navbar-left">
             <ul class="navbar-nav mr-auto ml-1">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'index' %}">Home</span></a>
+                    <a class="nav-link" href="{% url 'accounts:index' %}">Home</span></a>
                 </li>
             </ul>
         </div>
@@ -26,14 +26,14 @@
                         <a class="nav-link disabled" href="#!">{{ user.username }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        <a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a>
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'create' %}">Create account</a>
+                        <a class="nav-link" href="{% url 'accounts:create' %}">Create account</a>
                     </li>
                 {% endif %}
             </ul>
