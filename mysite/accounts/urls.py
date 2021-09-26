@@ -1,6 +1,7 @@
 from django.urls import path, include
 from . import views
 
+app_name = 'accounts'
 urlpatterns = [
     path('', views.IndexView.as_view(), name="index"),
     path('login/', views.MyLoginView.as_view(), name="login"),

@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts.apps.AccountsConfig',
-    # 'accounts.apps.PostConfig',
+    'post.apps.PostConfig',
 ]
 
 MIDDLEWARE = [
@@ -130,6 +130,6 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'login'  # ログインしていないときのリダイレクト先
-LOGIN_REDIRECT_URL = 'index'  # ログイン後のリダイレクト先
-LOGOUT_REDIRECT_URL = 'index'  # ログアウト後のリダイレクト先
+LOGIN_URL = 'accounts:login'  # ログインしていないときのリダイレクト先
+LOGIN_REDIRECT_URL = 'accounts:index'  # ログイン後のリダイレクト先
+LOGOUT_REDIRECT_URL = 'accounts:index'  # ログアウト後のリダイレクト先
