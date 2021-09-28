@@ -3,11 +3,13 @@ from django.shortcuts import render, redirect
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import FormView
 from . import forms
 from post.models import Post
 from django.views.generic import TemplateView, CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
+from django.contrib import messages
 
 
 class MyLoginView(LoginView):
@@ -27,6 +29,26 @@ class UserCreateView(CreateView):
     form_class = forms.CustomUserCreationForm
     template_name = "accounts/create.html"
     success_url = reverse_lazy("accounts:login")
+
+
+class UserChangeView(LoginRequiredMixin, FormView):
+    template_name = 'accounts/edit.html'
+    form_class = forms.UserChangeForm
+    success_url = reverse_lazy('post:post_list')
+
+    def form_valid(self, form):
+        # formのupdateメソッドにログインユーザーを渡して更新
+        form.update(user=self.request.user)
+        return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # 更新前のユーザー情報をkwargsとして渡す
+        kwargs.update({
+            'username': self.request.user.username,
+            'email': self.request.user.email,
+        })
+        return kwargs
 
 
 def user_profile(request, username):
