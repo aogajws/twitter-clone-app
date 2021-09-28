@@ -32,3 +32,10 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+
+def favorite(request, pk):
+    post = Post.objects.get(pk=pk)
+    post.likes += 1
+    post.save()
+    return redirect(request.META['HTTP_REFERER'])
