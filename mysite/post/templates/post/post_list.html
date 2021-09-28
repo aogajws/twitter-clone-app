@@ -7,21 +7,23 @@
         {% if post_list %}
             <ul class="list-unstyled">
             {% for post in post_list %}
-                <li class="media mt-2 border border-dark rounded">
-                    {% if post.author.icon %}
-                        <img class="d-flex align-self-center img-thumbnail" src="{{ post.author.icon.url }}" width="64" height="64">
-                    {% else %}
-                        <img class="d-flex align-self-center img-thumbnail" src="{% static 'images/user_icon.png' %}" width="64" height="64">
-                    {% endif %}
-                    <div class="media-body">
-                        <h5 class=""><a href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h5></h4>
+                <div class="row mt-2 border">
+                    <div class="col-1">
+                        {% if post.author.icon %}
+                            <img class="align-self-center img-thumbnail" src="{{ post.author.icon.url }}" width="100" height="100">
+                        {% else %}
+                            <img class="align-self-center img-thumbnail" src="{% static 'images/user_icon.png' %}" width="100" height="100">
+                        {% endif %}
+                    </div>
+                    <div class="col-9">
+                        <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
                         <p class="">
                             {{ post.content }}
                         </p>
-                        <a class="">👍 いいね {{post.likes}}</a>
-                        <h6 class="mb-2 mt-1 text-muted">{{ post.created_at }}</h6>
+                        <a class="d-inline-block">☆いいね {{post.likes}}</a>
+                        <h6 class="d-inline-block text-muted">{{ post.created_at }}</h6>
                     </div>
-                </li>
+                </div>
             {% endfor %}
             </ul>
         {% else %}
