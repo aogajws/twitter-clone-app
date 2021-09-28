@@ -28,6 +28,9 @@
             </div>
             <div class="container mt-3">
                 {% if User.username == request.user.username %}
+                    <a href="{% url "accounts:edit" %}" type="submit" class="btn btn-info w-100" id="edit">プロフィール編集</a>
+                    {% comment %} <a href="{% url "accounts:icon" %}" type="submit" class="btn btn-outline-primary w-100 mt-1" id="icon_edit">アイコン変更</a> {% endcomment %}
+                    <a href="{% url "accounts:password" %}" type="submit" class="btn btn-outline-primary w-100 mt-1" id="password_edit">パスワード変更</a>
                 {% elif is_following %}
                     <a href="{% url "accounts:remove" User.username %}" type="submit" class="btn btn-outline-primary" id="remove">フォロー解除</a>
                 {% else %}
