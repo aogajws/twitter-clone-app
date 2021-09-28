@@ -9,18 +9,20 @@
             {% for post in post_list %}
                 <div class="row mt-2 border">
                     <div class="col-1">
-                        {% if post.author.icon %}
-                            <img class="align-self-center img-thumbnail" src="{{ post.author.icon.url }}" width="100" height="100">
-                        {% else %}
-                            <img class="align-self-center img-thumbnail" src="{% static 'images/user_icon.png' %}" width="100" height="100">
-                        {% endif %}
+                        <a href={% url 'accounts:profile' post.author.username %}>
+                            {% if post.author.icon %}
+                                <img class="align-self-center img-thumbnail" src="{{ post.author.icon.url }}" width="100" height="100">
+                            {% else %}
+                                <img class="align-self-center img-thumbnail" src="{% static 'images/user_icon.png' %}" width="100" height="100">
+                            {% endif %}
+                        </a>
                     </div>
                     <div class="col-9">
                         <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
                         <p class="">
                             {{ post.content }}
                         </p>
-                        <a class="d-inline-block">☆いいね {{post.likes}}</a>
+                        <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">☆いいね {{post.likes}}</a>
                         <h6 class="d-inline-block text-muted">{{ post.created_at }}</h6>
                     </div>
                 </div>
