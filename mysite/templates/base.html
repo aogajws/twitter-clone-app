@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="{% static '/css/bootstrap.min.css' %}">
     <title>{% block title %}{% endblock title %}</title>
-<head>
+    {% block link %}{% endblock %}
+</head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="navbar" id="navbar-left">
-            <ul class="navbar-nav mr-auto ml-1">
+            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'accounts:index' %}">Home</span></a>
+                    <a class="navbar-brand" href="/">Twitter-clone</span></a>
                 </li>
             </ul>
         </div>
@@ -20,10 +21,13 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbar-right">
-            <ul class="navbar-nav mr-1">
+            <ul class="navbar-nav mt-2 mt-lg-0">
                 {% if request.user.is_authenticated  %}
                     <li class="nav-item">
-                        <a class="nav-link disabled" href="#!">{{ user.username }}</a>
+                        <a class="nav-link" href="{% url 'post:post_create' %}">Tweet</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:profile' request.user.username %}">Profile({{ user.username }})</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a>

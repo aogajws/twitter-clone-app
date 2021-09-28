@@ -131,5 +131,10 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'accounts:login'  # ログインしていないときのリダイレクト先
-LOGIN_REDIRECT_URL = 'accounts:index'  # ログイン後のリダイレクト先
-LOGOUT_REDIRECT_URL = 'accounts:index'  # ログアウト後のリダイレクト先
+LOGIN_REDIRECT_URL = 'post:post_list'  # ログイン後のリダイレクト先
+LOGOUT_REDIRECT_URL = 'post:post_list'  # ログアウト後のリダイレクト先
+
+AUTH_USER_MODEL = 'accounts.User'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
