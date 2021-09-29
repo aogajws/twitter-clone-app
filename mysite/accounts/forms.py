@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User
 from django.forms import ModelForm
+from django import forms
 
 
 class LoginForm(AuthenticationForm):
@@ -36,5 +37,10 @@ class UserChangeForm(ModelForm):
     def update(self, user):
         if user.username != self.cleaned_data['username']:
             user.username = self.cleaned_data['username']
-        user.email = self.cleaned_data['email']
+        if user.email != self.cleaned_data['email']:
+            user.email = self.cleaned_data['email']
         user.save()
+
+
+class UpLoadProfileImgForm(forms.Form):
+    icon = forms.ImageField()

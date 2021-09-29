@@ -1,3 +1,5 @@
+from .forms import UpLoadProfileImgForm
+from .models import User
 from django.shortcuts import render, redirect
 
 # Create your views here.
@@ -9,7 +11,6 @@ from post.models import Post
 from django.views.generic import TemplateView, CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from django.contrib import messages
 
 
 class MyLoginView(LoginView):
@@ -83,3 +84,20 @@ def follow(request, username):
     user.followers.add(request.user)
     user.save()
     return redirect('accounts:profile', username)
+
+
+def edit_profile_icon(request):
+    if request.method != 'POST':
+        form = UpLoadProfileImgForm()
+    else:
+        form = UpLoadProfileImgForm(request.POST, request.FILES)
+        if form.is_valid():
+            icon = form.cleaned_data['icon']
+            user = request.user
+            user.icon = icon
+            user.save()
+            return redirect('accounts:profile', user.username)
+    context = {
+        'form': form
+    }
+    return render(request, 'accounts/icon.html', context)
