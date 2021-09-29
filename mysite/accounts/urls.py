@@ -9,7 +9,7 @@ urlpatterns = [
     path('logout/', views.MyLogoutView.as_view(), name="logout"),
     path('create/', views.UserCreateView.as_view(), name="create"),
     path('edit/', views.UserChangeView.as_view(), name="edit"),
-    # path('icon/', views.IconChangeView.as_view(), name="icon"),
+    path('icon/', views.edit_profile_icon, name="icon"),
     path('password/', auth_views.PasswordChangeView.as_view(
         success_url=reverse_lazy('accounts:profile')), name="password"),
     path('@<str:username>/', views.user_profile, name='profile'),
