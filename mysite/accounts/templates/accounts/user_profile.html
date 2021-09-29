@@ -19,7 +19,7 @@
             </div>
             <div class="mt-3" id="bio">
                 {% if User.introduction %}
-                    <h6>{{ User.introduction }}</h6>
+                    <h6>{{ User.introduction | linebreaksbr | urlize }}</h6>
                 {% endif %}
             </div>
             <div class="container mt-3" id="following_count">

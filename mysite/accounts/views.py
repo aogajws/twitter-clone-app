@@ -48,6 +48,7 @@ class UserChangeView(LoginRequiredMixin, FormView):
         kwargs.update({
             'username': self.request.user.username,
             'email': self.request.user.email,
+            'introduction': self.request.user.introduction,
         })
         return kwargs
 
