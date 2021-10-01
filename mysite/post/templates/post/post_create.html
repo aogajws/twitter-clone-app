@@ -1,18 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}ツイート{% endblock title %}
 {% block content %}
-    <form method="POST">
+    <p>ツイートの作成</p>
+    <form action="" method="POST">
         {% csrf_token %}
-        {% for field in form %}
-            <div class="form-group">
-                <label class="control-label" for="{{ field.name }}">
-                    {{ field.label }}
-                </label>
-                <div class="form-control">
-                    <input type="" class="form-control" name="{{ field.name }}" id="{{ field.name }}">
-                </div>
-            </div> 
-        {% endfor %}
+        {{ form.as_p }}
         <button type="submit" class="btn btn-primary btn-sm mt-2">Tweet</button>
     </form>
 {% endblock %}

@@ -8,13 +8,18 @@ class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         for field in self.fields.values():
-            field.widget.attrs['placeholder'] = field.label
+            field.widget.attrs['class'] = 'form-control'
 
 
 class CustomUserCreationForm(UserCreationForm):
-    class Meta(UserCreationForm):
+    class Meta:
         model = User
         fields = UserCreationForm.Meta.fields + ('email',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
 
 
 class UserChangeForm(ModelForm):
@@ -37,6 +42,9 @@ class UserChangeForm(ModelForm):
         if introduction:
             self.fields['introduction'].widget.attrs['value'] = introduction
 
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+
     def update(self, user):
         if user.username != self.cleaned_data['username']:
             user.username = self.cleaned_data['username']
@@ -49,3 +57,8 @@ class UserChangeForm(ModelForm):
 
 class UpLoadProfileImgForm(forms.Form):
     icon = forms.ImageField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
