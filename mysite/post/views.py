@@ -24,7 +24,7 @@ def post_list(request):
     return render(request, 'post/post_list.html', context)
 
 
-class PostCreateView(CreateView):
+class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     form_class = forms.PostCreationForm
     template_name = "post/post_create.html"
@@ -41,4 +41,13 @@ def favorite(request, pk):
     post = Post.objects.get(pk=pk)
     post.likes += 1
     post.save()
+    messages.success(request, 'いいねしました。')
+    return redirect(request.META['HTTP_REFERER'])
+
+
+def delete(request, pk):
+    post = Post.objects.get(pk=pk)
+    if post.author == request.user:
+        post.delete()
+        messages.warning(request, 'ツイートを削除しました。')
     return redirect(request.META['HTTP_REFERER'])

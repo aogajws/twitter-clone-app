@@ -58,7 +58,8 @@
                                     {{ post.content | linebreaksbr | urlize }}
                                 </p>
                                 <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">☆いいね {{post.likes}}</a>
-                                <h6 class="d-inline-block text-muted">{{ post.created_at }}</h6>
+                            {% if post.author == request.user %}<a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2">削除</a>{% endif %}
+                            <h6 class="d-inline-block text-muted ms-2">{{ post.created_at }}</h6>
                             </div>
                         </div>
                     {% endfor %}
