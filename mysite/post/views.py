@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 # Create your views here.
 
 from .models import Post
+from . import forms
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import CreateView
@@ -23,11 +24,11 @@ def post_list(request):
     return render(request, 'post/post_list.html', context)
 
 
-class PostCreateView(LoginRequiredMixin, CreateView):
+class PostCreateView(CreateView):
     model = Post
+    form_class = forms.PostCreationForm
     template_name = "post/post_create.html"
-    fields = ['content']
-    success_url = reverse_lazy('post:post_list')
+    success_url = reverse_lazy("post:post_list")
 
     def form_valid(self, form):
         form.instance.author = self.request.user
