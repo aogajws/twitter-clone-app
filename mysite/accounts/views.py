@@ -1,17 +1,17 @@
 from django.contrib import messages
-from .forms import UpLoadProfileImgForm
-from .models import User
 from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
-from . import forms
-from post.models import Post
 from django.views.generic import TemplateView, CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
+
+from . import forms
+from post.models import Post
+from .forms import UpLoadProfileImgForm
 
 
 class MyLoginView(LoginView):

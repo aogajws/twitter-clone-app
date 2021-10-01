@@ -1,10 +1,7 @@
-from django.urls import path, include
+from django.urls import path
 from . import views
-from django.urls import reverse_lazy
-from .models import User
 
 app_name = 'accounts'
-user = User
 urlpatterns = [
     path('login/', views.MyLoginView.as_view(), name="login"),
     path('logout/', views.MyLogoutView.as_view(), name="logout"),
