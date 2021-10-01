@@ -1,9 +1,10 @@
+from django.contrib import messages
 from .forms import UpLoadProfileImgForm
 from .models import User
 from django.shortcuts import render, redirect
 
 # Create your views here.
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from . import forms
@@ -17,9 +18,19 @@ class MyLoginView(LoginView):
     form_class = forms.LoginForm
     template_name = "accounts/login.html"
 
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        messages.success(self.request, 'ログインしました。')
+        return result
+
 
 class MyLogoutView(LoginRequiredMixin, LogoutView):
     template_name = "accounts/logout.html"
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        messages.success(self.request, 'ログアウトしました。')
+        return result
 
 
 class IndexView(TemplateView):
@@ -31,16 +42,22 @@ class UserCreateView(CreateView):
     template_name = "accounts/create.html"
     success_url = reverse_lazy("accounts:login")
 
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        messages.success(self.request, 'アカウントを作成しました。')
+        return result
+
 
 class UserChangeView(LoginRequiredMixin, FormView):
     template_name = 'accounts/edit.html'
     form_class = forms.UserChangeForm
-    success_url = reverse_lazy('post:post_list')
 
     def form_valid(self, form):
         # formのupdateメソッドにログインユーザーを渡して更新
         form.update(user=self.request.user)
-        return super().form_valid(form)
+        result = super().form_valid(form)
+        messages.success(self.request, 'ユーザー情報を変更しました。')
+        return result
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -51,6 +68,19 @@ class UserChangeView(LoginRequiredMixin, FormView):
             'introduction': self.request.user.introduction,
         })
         return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy('accounts:profile', args=[self.request.user.username])
+
+
+class UserPasswordChangeView(PasswordChangeView):
+    def get_success_url(self):
+        return reverse_lazy('accounts:profile', args=[self.request.user.username])
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        messages.success(self.request, 'パスワードを変更しました。')
+        return result
 
 
 def user_profile(request, username):
@@ -77,6 +107,7 @@ def remove(request, username):
     user = get_user_model().objects.get(username=username)
     user.followers.remove(request.user)
     user.save()
+    messages.warning(request, 'リムーブしました。')
     return redirect('accounts:profile', username)
 
 
@@ -84,6 +115,7 @@ def follow(request, username):
     user = get_user_model().objects.get(username=username)
     user.followers.add(request.user)
     user.save()
+    messages.success(request, 'フォローしました。')
     return redirect('accounts:profile', username)
 
 
@@ -97,6 +129,7 @@ def edit_profile_icon(request):
             user = request.user
             user.icon = icon
             user.save()
+            messages.success(request, 'アイコンを変更しました。')
             return redirect('accounts:profile', user.username)
     context = {
         'form': form
