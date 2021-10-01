@@ -27,11 +27,6 @@ class MyLoginView(LoginView):
 class MyLogoutView(LoginRequiredMixin, LogoutView):
     template_name = "accounts/logout.html"
 
-    def form_valid(self, form):
-        result = super().form_valid(form)
-        messages.success(self.request, 'ログアウトしました。')
-        return result
-
 
 class IndexView(TemplateView):
     template_name = "accounts/index.html"
