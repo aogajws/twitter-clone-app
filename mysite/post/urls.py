@@ -9,5 +9,6 @@ urlpatterns = [
     path('', views.post_list, name='post_list'),
     path('post_create/', views.PostCreateView.as_view(), name='post_create'),
     path('<int:pk>/favorite/', views.favorite, name='favorite'),
+    path('<int:pk>/delete/', views.delete, name='delete'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
