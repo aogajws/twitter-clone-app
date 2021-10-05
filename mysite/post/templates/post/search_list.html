@@ -1,9 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}タイムライン{% endblock title %}
+{% block title %}ツイート検索{% endblock title %}
 {% block content %}
     {% if request.user.is_authenticated  %}
+        <form class="d-flex" action="" method="get" name="search">
+            <input class="form-control w-50" name="query" value="{{ request.GET.query }}" type="text" placeholder="ツイート検索">
+            <button class="btn btn-outline-success w-10" type="submit">検索</button>
+        </form>
         {% if post_list %}
             <ul class="list-unstyled">
                 {% for post in post_list %}
@@ -32,9 +36,18 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <h6>Tweetがまだありません</h6>
+            <h6 class="mt-2">Tweetが見つかりませんでした</h6>
         {% endif %}
     {% else %}
         <h6>ようこそTwitter-cloneへ！<a href="{% url 'accounts:create' %}">アカウントを作成する</a>か<a href="{% url 'accounts:login' %}">ログイン</a>してください</h6>
     {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+        var q = document.search.query;
+        var len = q.value.length;
+        q.focus();
+        q.setSelectionRange(len, len);
+    </script>
 {% endblock %}
