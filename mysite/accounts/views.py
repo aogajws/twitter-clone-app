@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.views.generic import TemplateView, CreateView, ListView
 from django.urls import reverse_lazy
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login, authenticate
 
 from . import forms
 from .models import User
@@ -36,11 +36,15 @@ class IndexView(TemplateView):
 class UserCreateView(CreateView):
     form_class = forms.CustomUserCreationForm
     template_name = "accounts/create.html"
-    success_url = reverse_lazy("accounts:login")
+    success_url = reverse_lazy("post:post_list")
 
     def form_valid(self, form):
         result = super().form_valid(form)
         messages.success(self.request, 'アカウントを作成しました。')
+        username = form.cleaned_data.get("username")
+        raw_pw = form.cleaned_data.get("password1")
+        user = authenticate(username=username, password=raw_pw)
+        login(self.request, user)
         return result
 
 

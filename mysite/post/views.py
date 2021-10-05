@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 
@@ -6,31 +6,32 @@ from .models import Post, Like
 from . import forms
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
 
 from itertools import chain
 
 
-def post_list(request):
-    if request.user.is_authenticated:
-        user = request.user
-        postlist = Post.objects.filter(author__in=chain(
-            request.user.following.all(), [request.user])).order_by('-created_at')
+class PostListView(LoginRequiredMixin, ListView):
+    template_name = 'post/post_list.html'
+    model = Post
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['User'] = self.request.user
         likedlist = []
-        for post in postlist:
-            if post.like_set.filter(user=request.user).exists():
+        for post in context['post_list']:
+            if post.like_set.filter(user=self.request.user).exists():
                 likedlist.append(post.pk)
-        context = {
-            'post_list': postlist,
-            'liked_list': likedlist,
-            'User': user,
-            'description': 'タイムライン'
-        }
-    else:
-        context = {}
-    return render(request, 'post/post_list.html', context)
+        context['liked_list'] = likedlist
+        return context
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Post.objects.filter(author__in=chain(
+            user.following.all(), [user])).order_by('-created_at')
+        return qs
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -90,3 +91,40 @@ class SearchPostListView(LoginRequiredMixin, ListView):
         if q_word:
             qs = qs.filter(content__contains=q_word)
         return qs
+
+
+class PostStatus(DetailView):
+    """ツイート詳細"""
+    template_name = 'post/post_status.html'
+    model = Post
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['User'] = self.request.user
+        context['pk'] = self.kwargs.get('pk')
+        likedlist = []
+        if post.like_set.filter(user=self.request.user).exists():
+            likedlist.append(post.pk)
+        context['liked_list'] = likedlist
+        # どのコメントにも紐づかないコメント=記事自体へのコメント を取得する
+        context['reply_list'] = self.object.reply_set.filter(
+            parent__isnull=True)
+        return context
+
+
+def reply_create(request, post_pk):
+    """記事へのコメント作成"""
+    post = get_object_or_404(Post, pk=post_pk)
+    form = forms.ReplyForm(request.POST or None)
+
+    if request.method == 'POST':
+        reply = form.save(commit=False)
+        reply.post = post
+        reply.save()
+        return redirect('post:post_detail', pk=post.pk)
+
+    context = {
+        'form': form,
+        'post': post
+    }
+    return render(request, 'post/post_status.html', context)

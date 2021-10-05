@@ -12,6 +12,8 @@ class Post(models.Model):
     author = models.ForeignKey(User, verbose_name='author',
                                on_delete=models.CASCADE)
     likes = models.IntegerField(default=0)
+    parent = models.ForeignKey('self', null=True, related_name='replies',
+                               on_delete=models.CASCADE)
 
     def __str__(self):
         return self.content
