@@ -42,8 +42,8 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=25, unique=True)
-    email = models.EmailField(unique=True)
+    username = models.CharField("ユーザー名", max_length=25, unique=True)
+    email = models.EmailField("メールアドレス", unique=True)
     icon = models.ImageField(blank=True, null=True)
     introduction = models.CharField(max_length=75, blank=True, null=True)
     followers = models.ManyToManyField(
