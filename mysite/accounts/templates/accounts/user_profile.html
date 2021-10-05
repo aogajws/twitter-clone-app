@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load boost %}
 
 {% block title %}@{{ User.username }}{% endblock title %}
 
@@ -39,40 +40,38 @@
         </div>
         <div class="col-9 p-3" id="user_post">
             <h2>@{{ User.username }}さんのTweet一覧</h2>
-            {% if post_list %}
+            {% for post,likes in post_list|zip:liked_count %}
                 <ul class="list-unstyled">
-                    {% for post in post_list %}
-                        <div class="row mt-2 border">
-                            <div style="width: 100px;" class="col-2 my-1">
-                                <a href={% url 'accounts:profile' post.author.username %}>
-                                    {% if post.author.icon %}
-                                        <img class="align-self-center img-thumbnail" src="{{ post.author.icon.url }}" width="100" height="100">
-                                    {% else %}
-                                        <img class="align-self-center img-thumbnail" src="{% static 'images/user_icon.png' %}" width="100" height="100">
-                                    {% endif %}
-                                </a>
-                            </div>
-                            <div class="col my-1">
-                                <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
-                                <p class="text-break">
-                                    {{ post.content | linebreaksbr | urlize }}
-                                </p>
-                                {% if post.pk in liked_list %}
-                                    <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-warning btn-sm">☆いいね {{ post.likes }}</button></a>
+                    <div class="row mt-2 border">
+                        <div style="width: 100px;" class="col-2 my-1">
+                            <a href={% url 'accounts:profile' post.author.username %}>
+                                {% if post.author.icon %}
+                                    <img class="align-self-center img-thumbnail" src="{{ post.author.icon.url }}" width="100" height="100">
                                 {% else %}
-                                    <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ post.likes }}</button></a>
+                                    <img class="align-self-center img-thumbnail" src="{% static 'images/user_icon.png' %}" width="100" height="100">
                                 {% endif %}
-                                {% if post.author == request.user %}
-                                    <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2"><button type="button" class="btn btn-outline-danger btn-sm">削除</button></a>
-                                {% endif %}
-                                <h6 class="d-inline-block text-muted ms-2">{{ post.created_at }}</h6>
-                            </div>
+                            </a>
                         </div>
-                    {% endfor %}
+                        <div class="col my-1">
+                            <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
+                            <p class="text-break">
+                                {{ post.content | linebreaksbr | urlize }}
+                            </p>
+                            {% if post.pk in liked_set %}
+                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button></a>
+                            {% else %}
+                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ likes }}</button></a>
+                            {% endif %}
+                            {% if post.author == request.user %}
+                                <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2"><button type="button" class="btn btn-outline-danger btn-sm">削除</button></a>
+                            {% endif %}
+                            <h6 class="d-inline-block text-muted ms-2">{{ post.created_at }}</h6>
+                        </div>
+                    </div>
                 </ul>
-            {% else %}
+            {% empty %}
                 <h5>Tweetはまだありません</h5>
-            {% endif %}
+            {% endfor %}
         </div>
     </div>
 {% endblock %}

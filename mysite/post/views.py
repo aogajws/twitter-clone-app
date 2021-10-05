@@ -1,36 +1,44 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 
 # Create your views here.
 
-from .models import Post, Like
-from . import forms
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
-
+from django.contrib.auth import get_user_model
 from itertools import chain
+from .models import Post, Like
+from . import forms
 
 
-def post_list(request):
-    if request.user.is_authenticated:
-        user = request.user
-        postlist = Post.objects.filter(author__in=chain(
-            request.user.following.all(), [request.user])).order_by('-created_at')
-        likedlist = []
-        for post in postlist:
-            if post.like_set.filter(user=request.user).exists():
-                likedlist.append(post.pk)
-        context = {
-            'post_list': postlist,
-            'liked_list': likedlist,
-            'User': user,
-            'description': 'タイムライン'
-        }
-    else:
-        context = {}
-    return render(request, 'post/post_list.html', context)
+class PostListView(LoginRequiredMixin, ListView):
+    template_name = 'post/post_list.html'
+    model = get_user_model()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['post_list'] = Post.objects.filter(author__in=chain(
+            user.following.all(), [user])).order_by('-created_at')
+        context['User'] = user
+        context['description'] = 'タイムライン'
+        liked_set = set()
+        liked_count = [None] * len(context['post_list'])
+        for i, post in enumerate(context['post_list']):
+            if post.like_set.filter(user=user).exists():
+                liked_set.add(post.pk)
+            liked_count[i] = Like.objects.filter(post=post).count()
+        context['liked_set'] = liked_set
+        context['liked_count'] = liked_count
+        return context
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Post.objects.filter(author__in=chain(
+            user.following.all(), [user])).order_by('-created_at')
+        return qs
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -46,24 +54,22 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return result
 
 
-def favorite(request, pk):
-    post = Post.objects.get(pk=pk)
+def favorite_view(request, pk):
+    post = get_object_or_404(Post, pk=pk)
     user = request.user
     like = Like.objects.filter(post=post, user=user)
     if like.exists():
         like.delete()
-        post.likes -= 1
         messages.warning(request, 'いいねを取り消しました。')
     else:
         like.create(post=post, user=user)
-        post.likes += 1
         messages.success(request, 'いいねしました。')
     post.save()
     return redirect(request.META['HTTP_REFERER'])
 
 
-def delete(request, pk):
-    post = Post.objects.get(pk=pk)
+def delete_view(request, pk):
+    post = get_object_or_404(Post, pk=pk)
     if post.author == request.user:
         post.delete()
         messages.warning(request, 'ツイートを削除しました。')
@@ -77,11 +83,14 @@ class SearchPostListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['User'] = self.request.user
-        likedlist = []
-        for post in context['post_list']:
+        liked_set = []
+        liked_count = [None] * len(context['post_list'])
+        for i, post in enumerate(context['post_list']):
             if post.like_set.filter(user=self.request.user).exists():
-                likedlist.append(post.pk)
-        context['liked_list'] = likedlist
+                liked_set.append(post.pk)
+            liked_count[i] = Like.objects.filter(post=post).count()
+        context['liked_set'] = liked_set
+        context['liked_count'] = liked_count
         return context
 
     def get_queryset(self):
