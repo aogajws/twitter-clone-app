@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 
 from . import forms
 from .models import User
-from post.models import Post
+from post.models import Post, Like
 from .forms import UpLoadProfileImgForm
 
 
@@ -86,9 +86,16 @@ def user_profile(request, username):
     follower_count = followers.count()
     followings = user.following.all()
     following_count = followings.count()
+    postlist = Post.objects.filter(
+        author__username=username).order_by('-created_at')
+    likedlist = []
+    for post in postlist:
+        if post.like_set.filter(user=request.user).exists():
+            likedlist.append(post.pk)
     context = {
         'User': user,
-        'post_list': Post.objects.filter(author__username=username).order_by('-created_at'),
+        'post_list': postlist,
+        'liked_list': likedlist,
         'is_following': is_following,
         'followers': followers,
         'follower_count': follower_count,

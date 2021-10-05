@@ -26,7 +26,11 @@
                             <p class="text-break">
                                 {{ post.content | linebreaksbr | urlize }}
                             </p>
-                            <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ post.likes }}</button></a>
+                            {% if post.pk in liked_list %}
+                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-warning btn-sm">☆いいね {{ post.likes }}</button></a>
+                            {% else %}
+                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ post.likes }}</button></a>
+                            {% endif %}
                             {% if post.author == request.user %}
                                 <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2"><button type="button" class="btn btn-outline-danger btn-sm">削除</button></a>
                             {% endif %}
