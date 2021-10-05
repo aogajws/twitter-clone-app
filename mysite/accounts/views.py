@@ -1,12 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import forms
+from post.models import Post
 from django.views.generic import TemplateView, CreateView
-from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
+from django.contrib.auth import get_user_model
 
 
 class MyLoginView(LoginView):
@@ -23,6 +24,40 @@ class IndexView(TemplateView):
 
 
 class UserCreateView(CreateView):
-    form_class = UserCreationForm
+    form_class = forms.CustomUserCreationForm
     template_name = "accounts/create.html"
-    success_url = reverse_lazy("post:login")
+    success_url = reverse_lazy("accounts:login")
+
+
+def user_profile_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
+    followers = user.followers.all()
+    is_following = request.user in followers
+    follower_count = followers.count()
+    followings = user.following.all()
+    following_count = followings.count()
+    context = {
+        'User': user,
+        'post_list': Post.objects.filter(author__username=username).order_by('-created_at'),
+        'is_following': is_following,
+        'followers': followers,
+        'follower_count': follower_count,
+        'following_count': following_count,
+    }
+    if request.method == 'POST':
+        pass
+    return render(request, 'accounts/user_profile.html', context)
+
+
+def remove_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
+    user.followers.remove(request.user)
+    user.save()
+    return redirect('accounts:profile', username)
+
+
+def follow_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
+    user.followers.add(request.user)
+    user.save()
+    return redirect('accounts:profile', username)
