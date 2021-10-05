@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView
@@ -29,8 +29,8 @@ class UserCreateView(CreateView):
     success_url = reverse_lazy("accounts:login")
 
 
-def user_profile(request, username):
-    user = get_user_model().objects.get(username=username)
+def user_profile_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
     followers = user.followers.all()
     is_following = request.user in followers
     follower_count = followers.count()
@@ -49,15 +49,15 @@ def user_profile(request, username):
     return render(request, 'accounts/user_profile.html', context)
 
 
-def remove(request, username):
-    user = get_user_model().objects.get(username=username)
+def remove_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
     user.followers.remove(request.user)
     user.save()
     return redirect('accounts:profile', username)
 
 
-def follow(request, username):
-    user = get_user_model().objects.get(username=username)
+def follow_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
     user.followers.add(request.user)
     user.save()
     return redirect('accounts:profile', username)
