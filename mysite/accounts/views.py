@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
@@ -10,7 +10,6 @@ from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
 from . import forms
-from .models import User
 from post.models import Post, Like
 from .forms import UpLoadProfileImgForm
 
@@ -79,8 +78,9 @@ class UserPasswordChangeView(PasswordChangeView):
         return result
 
 
-def user_profile(request, username):
-    user = get_user_model().objects.get(username=username)
+def user_profile_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
+    me = request.user
     followers = user.followers.all()
     is_following = request.user in followers
     follower_count = followers.count()
@@ -88,14 +88,17 @@ def user_profile(request, username):
     following_count = followings.count()
     postlist = Post.objects.filter(
         author__username=username).order_by('-created_at')
-    likedlist = []
-    for post in postlist:
-        if post.like_set.filter(user=request.user).exists():
-            likedlist.append(post.pk)
+    liked_set = set()
+    liked_count = [None] * len(postlist)
+    for i, post in enumerate(postlist):
+        if post.like_set.filter(user=me).exists():
+            liked_set.add(post.pk)
+        liked_count[i] = Like.objects.filter(post=post).count()
     context = {
         'User': user,
         'post_list': postlist,
-        'liked_list': likedlist,
+        'liked_set': liked_set,
+        'liked_count': liked_count,
         'is_following': is_following,
         'followers': followers,
         'follower_count': follower_count,
@@ -106,16 +109,16 @@ def user_profile(request, username):
     return render(request, 'accounts/user_profile.html', context)
 
 
-def remove(request, username):
-    user = get_user_model().objects.get(username=username)
+def remove_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
     user.followers.remove(request.user)
     user.save()
     messages.warning(request, 'リムーブしました。')
     return redirect(request.META['HTTP_REFERER'])
 
 
-def follow(request, username):
-    user = get_user_model().objects.get(username=username)
+def follow_view(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
     user.followers.add(request.user)
     user.save()
     messages.success(request, 'フォローしました。')
@@ -142,7 +145,7 @@ def edit_profile_icon(request):
 
 class AccountsListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = User
+    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -160,7 +163,7 @@ class AccountsListView(LoginRequiredMixin, ListView):
 
 class FollowingListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = User
+    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -172,7 +175,8 @@ class FollowingListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         username = self.kwargs.get('username')
-        qs = get_user_model().objects.get(username=username).following.all()
+        qs = get_object_or_404(
+            get_user_model(), username=username).following.all()
         if q_word:
             qs = qs.filter(username__contains=q_word)
         return qs
@@ -180,7 +184,7 @@ class FollowingListView(LoginRequiredMixin, ListView):
 
 class FollowerListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = User
+    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -192,7 +196,8 @@ class FollowerListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         username = self.kwargs.get('username')
-        qs = get_user_model().objects.get(username=username).followers.all()
+        qs = get_object_or_404(
+            get_user_model(), username=username).followers.all()
         if q_word:
             qs = qs.filter(username__contains=q_word)
         return qs

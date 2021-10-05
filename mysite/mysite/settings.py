@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'post.apps.PostConfig',
     'django_cleanup.apps.CleanupConfig',
+    'django_boost',
 ]
 
 MIDDLEWARE = [
