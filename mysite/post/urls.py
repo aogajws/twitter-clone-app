@@ -1,15 +1,14 @@
-from django.urls import path, include
+from django.urls import path
 from . import views
-from django.conf import settings
-from django.conf.urls.static import static
 
 
 app_name = 'post'
 urlpatterns = [
-    path('', views.post_list, name='post_list'),
+    path('', views.PostListView.as_view(), name='post_list'),
     path('post_create/', views.PostCreateView.as_view(), name='post_create'),
     path('search/', views.SearchPostListView.as_view(), name='search'),
-    path('<int:pk>/favorite/', views.favorite, name='favorite'),
-    path('<int:pk>/delete/', views.delete, name='delete'),
+    path('status/<int:pk>/', views.PostStatus.as_view(), name='status'),
+    path('reply/<int:pk>/', views.reply_create, name='reply'),
+    path('favorite/<int:pk>/', views.favorite, name='favorite'),
+    path('delete/<int:pk>/', views.delete, name='delete'),
 ]
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
