@@ -195,7 +195,7 @@ class FollowerListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
-        username = self.kwargs.get('username')
+        username = self.kwargs.get('username', "")
         qs = get_object_or_404(
             get_user_model(), username=username).followers.all()
         if q_word:
