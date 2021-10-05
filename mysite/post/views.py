@@ -6,6 +6,7 @@ from .models import Post
 from . import forms
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
 
@@ -18,6 +19,7 @@ def post_list(request):
         context = {
             'post_list': Post.objects.filter(author__in=chain(request.user.following.all(), [request.user])).order_by('-created_at'),
             'User': user,
+            'description': 'タイムライン'
         }
     else:
         context = {}
@@ -51,3 +53,20 @@ def delete(request, pk):
         post.delete()
         messages.warning(request, 'ツイートを削除しました。')
     return redirect(request.META['HTTP_REFERER'])
+
+
+class SearchPostListView(LoginRequiredMixin, ListView):
+    template_name = 'post/search_list.html'
+    model = Post
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['User'] = self.request.user
+        return context
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        qs = Post.objects.all().order_by('-created_at')
+        if q_word:
+            qs = qs.filter(content__contains=q_word)
+        return qs
