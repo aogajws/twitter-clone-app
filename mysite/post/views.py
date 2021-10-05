@@ -15,7 +15,6 @@ from . import forms
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
-    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -78,7 +77,6 @@ def delete_view(request, pk):
 
 class SearchPostListView(LoginRequiredMixin, ListView):
     template_name = 'post/search_list.html'
-    model = Post
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
