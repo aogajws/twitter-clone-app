@@ -8,6 +8,7 @@ app_name = 'post'
 urlpatterns = [
     path('', views.post_list, name='post_list'),
     path('post_create/', views.PostCreateView.as_view(), name='post_create'),
+    path('search/', views.SearchPostListView.as_view(), name='search'),
     path('<int:pk>/favorite/', views.favorite, name='favorite'),
     path('<int:pk>/delete/', views.delete, name='delete'),
 ]
