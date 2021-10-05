@@ -5,11 +5,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
-from django.views.generic import TemplateView, CreateView
+from django.views.generic import TemplateView, CreateView, ListView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
 from . import forms
+from .models import User
 from post.models import Post
 from .forms import UpLoadProfileImgForm
 
@@ -103,7 +104,7 @@ def remove(request, username):
     user.followers.remove(request.user)
     user.save()
     messages.warning(request, 'リムーブしました。')
-    return redirect('accounts:profile', username)
+    return redirect(request.META['HTTP_REFERER'])
 
 
 def follow(request, username):
@@ -111,7 +112,7 @@ def follow(request, username):
     user.followers.add(request.user)
     user.save()
     messages.success(request, 'フォローしました。')
-    return redirect('accounts:profile', username)
+    return redirect(request.META['HTTP_REFERER'])
 
 
 def edit_profile_icon(request):
@@ -130,3 +131,59 @@ def edit_profile_icon(request):
         'form': form
     }
     return render(request, 'accounts/icon.html', context)
+
+
+class AccountsListView(LoginRequiredMixin, ListView):
+    template_name = 'accounts/account_list.html'
+    model = User
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['followings'] = self.request.user.following.all()
+        context['description'] = "ユーザー一覧"
+        return context
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        qs = get_user_model().objects.all()
+        if q_word:
+            qs = qs.filter(username__contains=q_word)
+        return qs
+
+
+class FollowingListView(LoginRequiredMixin, ListView):
+    template_name = 'accounts/account_list.html'
+    model = User
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['followings'] = self.request.user.following.all()
+        context['description'] = "フォロー一覧"
+        return context
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        username = self.kwargs.get('username')
+        qs = get_user_model().objects.get(username=username).following.all()
+        if q_word:
+            qs = qs.filter(username__contains=q_word)
+        return qs
+
+
+class FollowerListView(LoginRequiredMixin, ListView):
+    template_name = 'accounts/account_list.html'
+    model = User
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['followings'] = self.request.user.following.all()
+        context['description'] = "フォロワー一覧"
+        return context
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        username = self.kwargs.get('username')
+        qs = get_user_model().objects.get(username=username).followers.all()
+        if q_word:
+            qs = qs.filter(username__contains=q_word)
+        return qs
