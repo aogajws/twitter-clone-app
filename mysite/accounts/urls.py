@@ -7,7 +7,7 @@ urlpatterns = [
     path('login/', views.MyLoginView.as_view(), name="login"),
     path('logout/', views.MyLogoutView.as_view(), name="logout"),
     path('create/', views.UserCreateView.as_view(), name="create"),
-    path('@<str:username>/', views.user_profile, name='profile'),
-    path('remove/@<str:username>/', views.remove, name="remove"),
-    path('follow/@<str:username>/', views.follow, name="follow"),
+    path('@<str:username>/remove/', views.remove_view, name="remove"),
+    path('@<str:username>/follow/', views.follow_view, name="follow"),
+    path('@<str:username>/', views.user_profile_view, name='profile'),
 ]

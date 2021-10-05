@@ -2,25 +2,29 @@ from django.shortcuts import render, redirect
 
 # Create your views here.
 
-from .models import Post
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 from django.contrib.auth import get_user_model
-
 from itertools import chain
+from .models import Post
 
 
-def post_list(request):
-    if request.user.is_authenticated:
-        user = request.user
-        context = {
-            'post_list': Post.objects.filter(author__in=chain(request.user.following.all(), [request.user])).order_by('-created_at'),
-            'User': user,
-        }
-    else:
-        context = {}
-    return render(request, 'post/post_list.html', context)
+class PostListView(LoginRequiredMixin, ListView):
+    template_name = 'post/post_list.html'
+    model = get_user_model()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['User'] = self.request.user
+        return context
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Post.objects.filter(author__in=chain(
+            user.following.all(), [user])).order_by('-created_at')
+        return qs
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
