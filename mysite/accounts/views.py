@@ -165,7 +165,8 @@ class FollowingListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['followings'] = self.request.user.following.all()
-        context['description'] = "フォロー一覧"
+        context['description'] = "@" + \
+            self.kwargs.get('username', "") + "さんのフォロー一覧"
         return context
 
     def get_queryset(self):
@@ -184,7 +185,8 @@ class FollowerListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['followings'] = self.request.user.following.all()
-        context['description'] = "フォロワー一覧"
+        context['description'] = "@" + \
+            self.kwargs.get('username', "") + "さんのフォロワー一覧"
         return context
 
     def get_queryset(self):

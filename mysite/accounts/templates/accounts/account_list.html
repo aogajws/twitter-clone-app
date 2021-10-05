@@ -4,12 +4,15 @@
 {% block title %}{{ description }}{% endblock title %}
 
 {% block content %}
+    {% if request.user.is_authenticated  %}
+        {% if description %}
+            <h2>{{ description }}</h2>
+        {% endif %}
         <div class="" id="users">
             <form class="d-flex" action="" method="get" name="search">
                 <input class="form-control w-50" name="query" value="{{ request.GET.query }}" type="text" placeholder="ユーザー検索">
                 <button class="btn btn-outline-success w-10" type="submit">検索</button>
             </form>
- 
             {% if user_list %}
                 <ul class="list-unstyled">
                     {% for user in user_list %}
@@ -48,7 +51,9 @@
                 <h6 class="mt-2">ユーザーが見つかりませんでした</h6>
             {% endif %}
         </div>
-    </div>
+    {% else %}
+        <h6>ようこそTwitter-cloneへ！<a href="{% url 'accounts:create' %}">アカウントを作成する</a>か<a href="{% url 'accounts:login' %}">ログイン</a>してください</h6>
+    {% endif %}
 {% endblock %}
 
 {% block extra_js %}
