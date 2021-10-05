@@ -22,8 +22,8 @@
                 {% endif %}
             </div>
             <div class="container-fluid mt-3" id="following_count">
-                <h6>フォロー {{ following_count }}人</h6>
-                <h6>フォロワー {{ follower_count }}人</h6>
+                <a class="text-dark" href="{% url "accounts:followings" User.username %}"><h6>フォロー {{ following_count }}人</h6></a>
+                <a class="text-dark" href="{% url "accounts:followers" User.username %}"><h6>フォロワー {{ follower_count }}人</h6></a>
             </div>
             <div class="container-fluid mt-3">
                 {% if User.username == request.user.username %}
