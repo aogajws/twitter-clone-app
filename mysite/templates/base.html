@@ -22,6 +22,11 @@
                             <a class="nav-link" href="{% url 'post:post_create' %}">Tweet</a>
                         </li>
                     </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:search_accounts' %}">Accounts</a>
+                        </li>
+                    </ul>
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:profile' request.user.username %}">Profile({{ user.username }})</a>
