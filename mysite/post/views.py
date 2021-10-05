@@ -6,14 +6,12 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView
-from django.contrib.auth import get_user_model
 from itertools import chain
 from .models import Post
 
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
-    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
