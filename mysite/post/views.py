@@ -10,6 +10,7 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
 from django.db.models import Q
+from django.contrib.auth import get_user_model
 
 from itertools import chain
 
@@ -56,7 +57,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 def favorite_view(request, pk):
-    post = Post.objects.get(pk=pk)
+    post = get_object_or_404(Post, pk=pk)
     user = request.user
     like = Like.objects.filter(post=post, user=user)
     if like.exists():
@@ -70,7 +71,7 @@ def favorite_view(request, pk):
 
 
 def delete_view(request, pk):
-    post = Post.objects.get(pk=pk)
+    post = get_object_or_404(Post, pk=pk)
     if post.author == request.user:
         post.delete()
         messages.warning(request, 'ツイートを削除しました。')
@@ -178,6 +179,27 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
         qs = Post.objects.filter(
             Q(content__contains="@" + self.request.user.username + " ") |
             Q(content__contains="@" + self.request.user.username + "　") |
+            Q(content__contains="@" + self.request.user.username + "\n") |
+            Q(content__contains="@" + self.request.user.username + "\r") |
             Q(content__endswith="@" + self.request.user.username)
         ).order_by('-created_at')
         return qs
+
+
+# class LikedAccountsListView(LoginRequiredMixin, ListView):
+#     template_name = 'accounts/account_list.html'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['followings'] = self.request.user.following.all()
+#         context['description'] = "いいねしたユーザー一覧"
+#         return context
+
+#     def get_queryset(self):
+#         q_word = self.request.GET.get('query')
+#         post = get_object_or_404(Post, pk=self.kwargs['pk'])
+#         # liked_user = Like.objects.filter(post=post).values_list("user")
+#         qs = get_user_model().like_set.filter(post=post)
+#         if q_word:
+#             qs = qs.filter(username__contains=q_word)
+#         return qs

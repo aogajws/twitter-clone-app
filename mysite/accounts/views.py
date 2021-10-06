@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
@@ -83,7 +83,7 @@ class UserPasswordChangeView(PasswordChangeView):
 
 
 def user_profile_view(request, username):
-    user = get_user_model().objects.get(username=username)
+    user = get_object_or_404(get_user_model(), username=username)
     me = request.user
     followers = user.followers.all()
     is_following = request.user in followers
@@ -114,7 +114,7 @@ def user_profile_view(request, username):
 
 
 def remove_view(request, username):
-    user = get_user_model().objects.get(username=username)
+    user = get_object_or_404(get_user_model(), username=username)
     user.followers.remove(request.user)
     user.save()
     messages.warning(request, 'リムーブしました。')
@@ -122,7 +122,7 @@ def remove_view(request, username):
 
 
 def follow_view(request, username):
-    user = get_user_model().objects.get(username=username)
+    user = get_object_or_404(get_user_model(), username=username)
     user.followers.add(request.user)
     user.save()
     messages.success(request, 'フォローしました。')
@@ -177,7 +177,8 @@ class FollowingListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         username = self.kwargs.get('username')
-        qs = get_user_model().objects.get(username=username).following.all()
+        qs = get_object_or_404(
+            get_user_model(), username=username).following.all()
         if q_word:
             qs = qs.filter(username__contains=q_word)
         return qs
@@ -196,7 +197,8 @@ class FollowerListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         username = self.kwargs.get('username')
-        qs = get_user_model().objects.get(username=username).followers.all()
+        qs = get_object_or_404(
+            get_user_model(), username=username).followers.all()
         if q_word:
             qs = qs.filter(username__contains=q_word)
         return qs
