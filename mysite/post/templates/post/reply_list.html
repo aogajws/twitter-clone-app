@@ -35,11 +35,13 @@
                             </a>
                         {% endif %}
                         {% if post.author == request.user %}
-                            <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2">
+                            <a href="{% url "post:delete" post.pk %}" class="d-inline-block">
                                 <button type="button" class="btn btn-outline-danger btn-sm">削除</button>
                             </a>
                         {% endif %}
-                        <h6 class="d-inline-block text-muted ms-2">{{ post.created_at }}</h6>
+                        <a href="{% url "post:status" post.pk %}" class="d-inline-block text-muted ms-2">
+                            <h6 class="">{{ post.created_at }}</h6>
+                        </a>
                     </div>
                 </div>
             </ul>
