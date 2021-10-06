@@ -19,12 +19,19 @@ class PostListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['User'] = self.request.user
-        likedlist = []
-        for post in context['post_list']:
-            if post.like_set.filter(user=self.request.user).exists():
-                likedlist.append(post.pk)
-        context['liked_list'] = likedlist
+        user = self.request.user
+        context['post_list'] = Post.objects.filter(author__in=chain(
+            user.following.all(), [user])).order_by('-created_at')
+        context['User'] = user
+        context['description'] = 'タイムライン'
+        liked_set = set()
+        liked_count = [None] * len(context['post_list'])
+        for i, post in enumerate(context['post_list']):
+            if post.like_set.filter(user=user).exists():
+                liked_set.add(post.pk)
+            liked_count[i] = Like.objects.filter(post=post).count()
+        context['liked_set'] = liked_set
+        context['liked_count'] = liked_count
         return context
 
     def get_queryset(self):
@@ -47,23 +54,21 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return result
 
 
-def favorite(request, pk):
+def favorite_view(request, pk):
     post = Post.objects.get(pk=pk)
     user = request.user
     like = Like.objects.filter(post=post, user=user)
     if like.exists():
         like.delete()
-        post.likes -= 1
         messages.warning(request, 'いいねを取り消しました。')
     else:
         like.create(post=post, user=user)
-        post.likes += 1
         messages.success(request, 'いいねしました。')
     post.save()
     return redirect(request.META['HTTP_REFERER'])
 
 
-def delete(request, pk):
+def delete_view(request, pk):
     post = Post.objects.get(pk=pk)
     if post.author == request.user:
         post.delete()
@@ -78,11 +83,14 @@ class SearchPostListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['User'] = self.request.user
-        likedlist = []
-        for post in context['post_list']:
-            if post.like_set.filter(user=self.request.user).exists():
-                likedlist.append(post.pk)
-        context['liked_list'] = likedlist
+        liked_set = set()
+        liked_count = [None] * len(context['post_list'])
+        for i, post in enumerate(context['post_list']):
+            if post.like_set.filter(user=context['User']).exists():
+                liked_set.add(post.pk)
+            liked_count[i] = Like.objects.filter(post=post).count()
+        context['liked_set'] = liked_set
+        context['liked_count'] = liked_count
         return context
 
     def get_queryset(self):
@@ -94,7 +102,6 @@ class SearchPostListView(LoginRequiredMixin, ListView):
 
 
 class PostStatus(DetailView):
-    """ツイート詳細"""
     template_name = 'post/post_status.html'
     model = Post
 
@@ -102,29 +109,71 @@ class PostStatus(DetailView):
         context = super().get_context_data(**kwargs)
         context['User'] = self.request.user
         context['pk'] = self.kwargs.get('pk')
-        likedlist = []
-        if post.like_set.filter(user=self.request.user).exists():
-            likedlist.append(post.pk)
-        context['liked_list'] = likedlist
-        # どのコメントにも紐づかないコメント=記事自体へのコメント を取得する
-        context['reply_list'] = self.object.reply_set.filter(
-            parent__isnull=True)
+        post = get_object_or_404(Post, pk=context['pk'])
+        parent = post.parent
+        if parent:
+            context['parent_post'] = parent
+            context['parent_liked'] = parent.like_set.filter(
+                user=context['User']).exists()
+            context['parent_likes'] = Like.objects.filter(
+                post=parent).count()
+        else:
+            context['parent_post'] = None
+        context['post'] = post
+        context['liked'] = post.like_set.filter(
+            user=context['User']).exists()
+        context['likes'] = Like.objects.filter(
+            post=post).count()
+        context['reply_list'] = Post.objects.filter(parent=post)
+        reply_liked_set = set()
+        reply_liked_count = [None] * len(context['reply_list'])
+        for i, reply in enumerate(context['reply_list']):
+            if reply.like_set.filter(user=context['User']).exists():
+                reply_liked_set.add(reply.pk)
+            reply_liked_count[i] = Like.objects.filter(post=reply).count()
+        context['reply_liked_set'] = reply_liked_set
+        context['reply_liked_count'] = reply_liked_count
         return context
 
 
-def reply_create(request, post_pk):
-    """記事へのコメント作成"""
-    post = get_object_or_404(Post, pk=post_pk)
-    form = forms.ReplyForm(request.POST or None)
+def reply_create_view(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    form = forms.PostCreationForm(request.POST or None)
 
     if request.method == 'POST':
         reply = form.save(commit=False)
-        reply.post = post
+        reply.author = request.user
+        reply.parent = post
+        reply.content = "@" + reply.parent.author.username + " " + reply.content
         reply.save()
-        return redirect('post:post_detail', pk=post.pk)
+        messages.success(request, '返信しました。')
+        return redirect('post:post_list')
 
     context = {
         'form': form,
         'post': post
     }
-    return render(request, 'post/post_status.html', context)
+    return render(request, 'post/post_create.html', context)
+
+
+class ReplyPostListView(LoginRequiredMixin, ListView):
+    template_name = 'post/replies.html'
+    model = Post
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['User'] = self.request.user
+        liked_set = set()
+        liked_count = [None] * len(context['post_list'])
+        for i, post in enumerate(context['post_list']):
+            if post.like_set.filter(user=context['User']).exists():
+                liked_set.add(post.pk)
+            liked_count[i] = Like.objects.filter(post=post).count()
+        context['liked_set'] = liked_set
+        context['liked_count'] = liked_count
+        return context
+
+    def get_queryset(self):
+        qs = Post.objects.filter(
+            content__contains="@" + self.request.user.username).order_by('-created_at')
+        return qs
