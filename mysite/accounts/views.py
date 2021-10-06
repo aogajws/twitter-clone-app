@@ -10,7 +10,6 @@ from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model, login, authenticate
 
 from . import forms
-from .models import User
 from post.models import Post, Like
 from .forms import UpLoadProfileImgForm
 
@@ -83,8 +82,9 @@ class UserPasswordChangeView(PasswordChangeView):
         return result
 
 
-def user_profile(request, username):
+def user_profile_view(request, username):
     user = get_user_model().objects.get(username=username)
+    me = request.user
     followers = user.followers.all()
     is_following = request.user in followers
     follower_count = followers.count()
@@ -92,14 +92,17 @@ def user_profile(request, username):
     following_count = followings.count()
     postlist = Post.objects.filter(
         author__username=username).order_by('-created_at')
-    likedlist = []
-    for post in postlist:
-        if post.like_set.filter(user=request.user).exists():
-            likedlist.append(post.pk)
+    liked_set = set()
+    liked_count = [None] * len(postlist)
+    for i, post in enumerate(postlist):
+        if post.like_set.filter(user=me).exists():
+            liked_set.add(post.pk)
+        liked_count[i] = Like.objects.filter(post=post).count()
     context = {
         'User': user,
         'post_list': postlist,
-        'liked_list': likedlist,
+        'liked_set': liked_set,
+        'liked_count': liked_count,
         'is_following': is_following,
         'followers': followers,
         'follower_count': follower_count,
@@ -110,7 +113,7 @@ def user_profile(request, username):
     return render(request, 'accounts/user_profile.html', context)
 
 
-def remove(request, username):
+def remove_view(request, username):
     user = get_user_model().objects.get(username=username)
     user.followers.remove(request.user)
     user.save()
@@ -118,7 +121,7 @@ def remove(request, username):
     return redirect(request.META['HTTP_REFERER'])
 
 
-def follow(request, username):
+def follow_view(request, username):
     user = get_user_model().objects.get(username=username)
     user.followers.add(request.user)
     user.save()
@@ -146,7 +149,6 @@ def edit_profile_icon(request):
 
 class AccountsListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = User
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -164,7 +166,6 @@ class AccountsListView(LoginRequiredMixin, ListView):
 
 class FollowingListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = User
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -184,7 +185,6 @@ class FollowingListView(LoginRequiredMixin, ListView):
 
 class FollowerListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = User
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

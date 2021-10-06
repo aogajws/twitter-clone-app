@@ -1,28 +1,117 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load boost %}
 
 {% block title %}ツイート{% endblock title %}
 {% block content %}
+{% if parent_post %}
     <div class="row mt-2 border">
         <div style="width: 100px;" class="col-2 my-1">
-            {% if post.author.icon %}
-                <img class="align-self-center img-thumbnail img-fluid" src="{{ post.author.icon.url }}">
+            {% if parent_post.author.icon %}
+                <img class="align-self-center img-thumbnail img-fluid" src="{{ parent_post.author.icon.url }}">
             {% else %}
                 <img class="align-self-center img-thumbnail img-fluid" src="{% static 'images/user_icon.png' %}">
             {% endif %}
+        </div>
+        <div class="col my-1">
+            <h4 class=""><a class="text-dark" href={% url 'accounts:profile' parent_post.author.username %}>@{{ parent_post.author }}</a></h4>
+            <p class="small text-break">
+                {{ parent_post.content | linebreaksbr | urlize }}
+            </p>
+            <a href="{% url "post:reply" parent_post.pk %}" class="d-inline-block">
+                <button type="button" class="btn btn-primary btn-sm">返信</button>
+            </a>
+            {% if parent_liked %}
+                <a href="{% url "post:favorite" parent_post.pk %}" class="d-inline-block">
+                    <button type="button" class="btn btn-warning btn-sm">☆いいね {{ parent_likes }}</button>
+                </a>
+            {% else %}
+                <a href="{% url "post:favorite" parent_post.pk %}" class="d-inline-block">
+                    <button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ parent_likes }}</button>
+                </a>
+            {% endif %}
+            {% if parent_post.author == request.user %}
+                <a href="{% url "post:delete" parent_post.pk %}" class="d-inline-block">
+                    <button type="button" class="btn btn-outline-danger btn-sm">削除</button>
+                </a>
+            {% endif %}
+            <a href="{% url "post:status" parent_post.pk %}" class="d-inline-block text-muted ms-2">
+                <h6 class="">{{ parent_post.created_at }}</h6>
+            </a>
+        </div>
+    </div>
+{% endif %}
+<div class="row mt-2 border">
+    <div style="width: 100px;" class="col-2 my-1">
+        {% if post.author.icon %}
+            <img class="align-self-center img-thumbnail img-fluid" src="{{ post.author.icon.url }}">
+        {% else %}
+            <img class="align-self-center img-thumbnail img-fluid" src="{% static 'images/user_icon.png' %}">
+        {% endif %}
+    </div>
+    <div class="col my-1 d-flex align-items-center">
+        <h2 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h2>
+    </div>
+    <div class="my-1">
+        <h3 class="text-break mb-3">
+            {{ post.content | linebreaksbr | urlize }}
+        </h3>
+        <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
+            <button type="button" class="btn btn-primary btn-sm">返信</button>
+        </a>
+        {% if liked %}
+            <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
+                <button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button>
+            </a>
+        {% else %}
+            <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
+                <button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ likes }}</button>
+            </a>
+        {% endif %}
+        {% if post.author == request.user %}
+            <a href="{% url "post:delete" post.pk %}" class="d-inline-block">
+                <button type="button" class="btn btn-outline-danger btn-sm">削除</button>
+            </a>
+        {% endif %}
+        <a href="{% url "post:status" post.pk %}" class="d-inline-block text-muted ms-2">
+            <h6 class="">{{ post.created_at }}</h6>
+        </a>
+    </div>
+</div>
+{% for post, likes in reply_list|zip:reply_liked_count %}
+    {% if forloop.first %}
+        <div style="width: 95%;" class="ms-auto mt-3">
+         <p>このツイートへの返信一覧</p>
+    {% endif %}
+    <div class="row ms-auto mt-2 border">
+        <div style="width: 100px;" class="col-2 my-1">
+            <a href={% url 'accounts:profile' post.author.username %}>
+                {% if post.author.icon %}
+                    <img class="align-self-center img-thumbnail img-fluid" src="{{ post.author.icon.url }}">
+                {% else %}
+                    <img class="align-self-center img-thumbnail img-fluid" src="{% static 'images/user_icon.png' %}">
+                {% endif %}
+            </a>
         </div>
         <div class="col my-1">
             <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
             <p class="text-break">
                 {{ post.content | linebreaksbr | urlize }}
             </p>
-            {% if post.pk in liked_list %}
-                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-warning btn-sm">☆いいね {{ post.likes }}</button></a>
+            <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
+                <button type="button" class="btn btn-primary btn-sm">返信</button>
+            </a>
+            {% if post.pk in reply_liked_set %}
+                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
+                    <button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button>
+                </a>
             {% else %}
-                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ post.likes }}</button></a>
+                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
+                    <button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ likes }}</button>
+                </a>
             {% endif %}
             {% if post.author == request.user %}
-                <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2">
+                <a href="{% url "post:delete" post.pk %}" class="d-inline-block">
                     <button type="button" class="btn btn-outline-danger btn-sm">削除</button>
                 </a>
             {% endif %}
@@ -30,37 +119,9 @@
                 <h6 class="">{{ post.created_at }}</h6>
             </a>
         </div>
-        {% for post in reply_list %}
-            <div class="row mt-2 border">
-                <div style="width: 100px;" class="col-2 my-1 ms-auto">
-                    <a href={% url 'accounts:profile' post.author.username %}>
-                        {% if post.author.icon %}
-                            <img class="align-self-center img-thumbnail img-fluid" src="{{ post.author.icon.url }}">
-                        {% else %}
-                            <img class="align-self-center img-thumbnail img-fluid" src="{% static 'images/user_icon.png' %}">
-                        {% endif %}
-                    </a>
-                </div>
-                <div class="col-8 my-1">
-                    <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
-                    <p class="text-break">
-                        {{ post.content | linebreaksbr | urlize }}
-                    </p>
-                    {% if post.pk in liked_list %}
-                        <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-warning btn-sm">☆いいね {{ post.likes }}</button></a>
-                    {% else %}
-                        <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ post.likes }}</button></a>
-                    {% endif %}
-                    {% if post.author == request.user %}
-                        <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2">
-                            <button type="button" class="btn btn-outline-danger btn-sm">削除</button>
-                        </a>
-                    {% endif %}
-                    <a href="{% url "post:status" post.pk %}" class="d-inline-block text-muted ms-2">
-                        <h6 class="">{{ post.created_at }}</h6>
-                    </a>
-                </div>
-            </div>
-        {% endfor %}
     </div>
+    {% if forloop.last %}
+        </div>
+    {% endif %}
+{% endfor %}
 {% endblock %}
