@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model, login, authenticate
 
 from . import forms
-from post.models import Post, Like
+from post.models import Post
 from .forms import UpLoadProfileImgForm
 
 
@@ -90,19 +90,17 @@ def user_profile_view(request, username):
     follower_count = followers.count()
     followings = user.following.all()
     following_count = followings.count()
-    postlist = Post.objects.filter(
+    post_list = Post.objects.filter(
         author__username=username).order_by('-created_at')
-    liked_set = set()
-    liked_count = [None] * len(postlist)
-    for i, post in enumerate(postlist):
-        if post.like_set.filter(user=me).exists():
-            liked_set.add(post.pk)
-        liked_count[i] = Like.objects.filter(post=post).count()
+    liked = [None] * len(post_list)
+    liked_count = [None] * len(post_list)
+    for i, post in enumerate(post_list):
+        liked_users = post.liked_users
+        liked_count[i] = liked_users.count()
+        liked[i] = me in liked_users.all()
     context = {
         'User': user,
-        'post_list': postlist,
-        'liked_set': liked_set,
-        'liked_count': liked_count,
+        'zip': zip(post_list, liked_count, liked),
         'is_following': is_following,
         'followers': followers,
         'follower_count': follower_count,

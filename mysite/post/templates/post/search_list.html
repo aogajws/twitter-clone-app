@@ -9,7 +9,7 @@
             <input class="form-control w-50" name="query" value="{{ request.GET.query }}" type="text" placeholder="ツイート検索">
             <button class="btn btn-outline-success w-10" type="submit">検索</button>
         </form>
-        {% for post,likes in post_list|zip:liked_count %}
+        {% for post, likes, liked in zip %}
             <ul class="list-unstyled">
                 <div class="row mt-2 border">
                     <div style="width: 100px;" class="col-2 my-1">
@@ -29,7 +29,7 @@
                         <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
                             <button type="button" class="btn btn-primary btn-sm">返信</button>
                         </a>
-                        {% if post.pk in liked_set %}
+                        {% if liked %}
                             <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
                                 <button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button>
                             </a>
