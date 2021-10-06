@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
+from django.db.models import Q
 
 from itertools import chain
 
@@ -175,5 +176,8 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = Post.objects.filter(
-            content__contains="@" + self.request.user.username).order_by('-created_at')
+            Q(content__contains="@" + self.request.user.username + " ") |
+            Q(content__contains="@" + self.request.user.username + "　") |
+            Q(content__endswith="@" + self.request.user.username)
+        ).order_by('-created_at')
         return qs
