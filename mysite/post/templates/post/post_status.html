@@ -77,13 +77,13 @@
             <h6 class="">{{ post.created_at }}</h6>
         </a>
     </div>
-    {% comment %} {% if likes %}
+    {% if likes %}
         <div class="my-1">
             <a href="{% url "post:favorited" post.pk %}" class="text-dark d-inline-block ms-2">
                 <h6 class="">{{ likes }}件のいいね</h6>
             </a>
         </div>
-    {% endif %} {% endcomment %}
+    {% endif %}
 </div>
 {% for post, likes, liked in zip %}
     {% if forloop.first %}

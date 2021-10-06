@@ -185,20 +185,20 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
         return qs
 
 
-# class LikedAccountsListView(LoginRequiredMixin, ListView):
-#     template_name = 'accounts/account_list.html'
+class LikedAccountsListView(LoginRequiredMixin, ListView):
+    template_name = 'accounts/account_list.html'
 
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['followings'] = self.request.user.following.all()
-#         context['description'] = "いいねしたユーザー一覧"
-#         return context
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['followings'] = self.request.user.following.all()
+        context['description'] = "いいねしたユーザー一覧"
+        return context
 
-#     def get_queryset(self):
-#         q_word = self.request.GET.get('query')
-#         post = get_object_or_404(Post, pk=self.kwargs['pk'])
-#         # liked_user = Like.objects.filter(post=post).values_list("user")
-#         qs = get_user_model().like_set.filter(post=post)
-#         if q_word:
-#             qs = qs.filter(username__contains=q_word)
-#         return qs
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        post = get_object_or_404(Post, pk=self.kwargs['pk'])
+        # qs = get_user_model().like_set.filter(post=post)
+        qs = post.liked_users.all()
+        if q_word:
+            qs = qs.filter(username__contains=q_word)
+        return qs
