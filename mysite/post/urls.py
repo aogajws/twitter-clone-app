@@ -11,7 +11,7 @@ urlpatterns = [
     path('reply/<int:pk>/', views.reply_create_view, name='reply'),
     path('favorite/<int:pk>/', views.favorite_view, name='favorite'),
     path('delete/<int:pk>/', views.delete_view, name='delete'),
-    # path('favorited/<int:pk>/',
-    #      views.LikedAccountsListView.as_view(), name='favorited'),
+    path('favorited/<int:pk>/',
+         views.LikedAccountsListView.as_view(), name='favorited'),
     path('', views.PostListView.as_view(), name='post_list'),
 ]
