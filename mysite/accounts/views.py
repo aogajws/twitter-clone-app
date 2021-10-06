@@ -27,6 +27,11 @@ class MyLoginView(LoginView):
 class MyLogoutView(LoginRequiredMixin, LogoutView):
     template_name = "accounts/logout.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        messages.warning(request, 'ログアウトしました。')
+        return response
+
 
 class IndexView(TemplateView):
     template_name = "accounts/index.html"
