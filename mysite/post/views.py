@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 
-from .models import Post, Like
+from .models import Post
 from . import forms
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -22,18 +22,17 @@ class PostListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        context['post_list'] = Post.objects.filter(author__in=chain(
+        post_list = Post.objects.filter(author__in=chain(
             user.following.all(), [user])).order_by('-created_at')
         context['User'] = user
         context['description'] = 'タイムライン'
-        liked_set = set()
-        liked_count = [None] * len(context['post_list'])
-        for i, post in enumerate(context['post_list']):
-            if post.like_set.filter(user=user).exists():
-                liked_set.add(post.pk)
-            liked_count[i] = Like.objects.filter(post=post).count()
-        context['liked_set'] = liked_set
-        context['liked_count'] = liked_count
+        liked_count = [None] * len(post_list)
+        liked = [None] * len(post_list)
+        for i, post in enumerate(post_list):
+            liked_users = post.liked_users
+            liked_count[i] = liked_users.count()
+            liked[i] = user in liked_users.all()
+        context['zip'] = zip(post_list, liked_count, liked)
         return context
 
     def get_queryset(self):
@@ -59,12 +58,12 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 def favorite_view(request, pk):
     post = get_object_or_404(Post, pk=pk)
     user = request.user
-    like = Like.objects.filter(post=post, user=user)
-    if like.exists():
-        like.delete()
+    already_liked = user in post.liked_users.all()
+    if already_liked:
+        post.liked_users.remove(user)
         messages.warning(request, 'いいねを取り消しました。')
     else:
-        like.create(post=post, user=user)
+        post.liked_users.add(user)
         messages.success(request, 'いいねしました。')
     post.save()
     return redirect(request.META['HTTP_REFERER'])
@@ -84,15 +83,16 @@ class SearchPostListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['User'] = self.request.user
-        liked_set = set()
-        liked_count = [None] * len(context['post_list'])
-        for i, post in enumerate(context['post_list']):
-            if post.like_set.filter(user=context['User']).exists():
-                liked_set.add(post.pk)
-            liked_count[i] = Like.objects.filter(post=post).count()
-        context['liked_set'] = liked_set
-        context['liked_count'] = liked_count
+        user = self.request.user
+        context['User'] = user
+        post_list = context['post_list']
+        liked_count = [None] * len(post_list)
+        liked = [None] * len(post_list)
+        for i, post in enumerate(post_list):
+            liked_users = post.liked_users
+            liked_count[i] = liked_users.count()
+            liked[i] = user in liked_users.all()
+        context['zip'] = zip(post_list, liked_count, liked)
         return context
 
     def get_queryset(self):
@@ -109,32 +109,30 @@ class PostStatus(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['User'] = self.request.user
+        user = self.request.user
+        context['User'] = user
         context['pk'] = self.kwargs.get('pk')
         post = get_object_or_404(Post, pk=context['pk'])
         parent = post.parent
         if parent:
             context['parent_post'] = parent
-            context['parent_liked'] = parent.like_set.filter(
-                user=context['User']).exists()
-            context['parent_likes'] = Like.objects.filter(
-                post=parent).count()
+            liked_users = parent.liked_users
+            context['parent_liked'] = user in liked_users.all()
+            context['parent_likes'] = liked_users.count()
         else:
             context['parent_post'] = None
         context['post'] = post
-        context['liked'] = post.like_set.filter(
-            user=context['User']).exists()
-        context['likes'] = Like.objects.filter(
-            post=post).count()
-        context['reply_list'] = Post.objects.filter(parent=post)
-        reply_liked_set = set()
-        reply_liked_count = [None] * len(context['reply_list'])
-        for i, reply in enumerate(context['reply_list']):
-            if reply.like_set.filter(user=context['User']).exists():
-                reply_liked_set.add(reply.pk)
-            reply_liked_count[i] = Like.objects.filter(post=reply).count()
-        context['reply_liked_set'] = reply_liked_set
-        context['reply_liked_count'] = reply_liked_count
+        liked_users = post.liked_users
+        context['liked'] = user in liked_users.all()
+        context['likes'] = liked_users.count()
+        reply_list = Post.objects.filter(parent=post)
+        reply_liked_count = [None] * len(reply_list)
+        reply_liked = [False] * len(reply_list)
+        for i, reply in enumerate(reply_list):
+            liked_users = reply.liked_users
+            reply_liked_count[i] = liked_users.count()
+            reply_liked[i] = user in liked_users.all()
+        context['zip'] = zip(reply_list, reply_liked_count, reply_liked)
         return context
 
 
@@ -159,20 +157,21 @@ def reply_create_view(request, pk):
 
 
 class ReplyPostListView(LoginRequiredMixin, ListView):
-    template_name = 'post/replies.html'
+    template_name = 'post/reply_list.html'
     model = Post
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['User'] = self.request.user
-        liked_set = set()
-        liked_count = [None] * len(context['post_list'])
-        for i, post in enumerate(context['post_list']):
-            if post.like_set.filter(user=context['User']).exists():
-                liked_set.add(post.pk)
-            liked_count[i] = Like.objects.filter(post=post).count()
-        context['liked_set'] = liked_set
-        context['liked_count'] = liked_count
+        user = self.request.user
+        context['User'] = user
+        post_list = context['post_list']
+        liked_count = [None] * len(post_list)
+        liked = [False] * len(post_list)
+        for i, post in enumerate(post_list):
+            liked_users = post.liked_users
+            liked_count[i] = liked_users.count()
+            liked[i] = user in liked_users.all()
+        context['zip'] = zip(post_list, liked_count, liked)
         return context
 
     def get_queryset(self):

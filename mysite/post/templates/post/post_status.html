@@ -85,7 +85,7 @@
         </div>
     {% endif %} {% endcomment %}
 </div>
-{% for post, likes in reply_list|zip:reply_liked_count %}
+{% for post, likes, liked in zip %}
     {% if forloop.first %}
         <div style="width: 95%;" class="ms-auto mt-3">
          <p>このツイートへの返信一覧</p>
@@ -108,7 +108,7 @@
             <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
                 <button type="button" class="btn btn-primary btn-sm">返信</button>
             </a>
-            {% if post.pk in reply_liked_set %}
+            {% if liked %}
                 <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
                     <button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button>
                 </a>
