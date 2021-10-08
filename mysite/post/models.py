@@ -15,6 +15,8 @@ class Post(models.Model):
                                on_delete=models.CASCADE)
     liked_users = models.ManyToManyField(
         get_user_model(), related_name='favorite_posts', blank=True, symmetrical=False)
+    repost_parent = models.ForeignKey('self', blank=True, null=True, related_name='reposted',
+                                      on_delete=models.CASCADE)
 
     def __str__(self):
         return self.content
