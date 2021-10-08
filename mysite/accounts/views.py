@@ -1,6 +1,4 @@
 from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
-
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
