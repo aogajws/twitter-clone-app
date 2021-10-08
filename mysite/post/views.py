@@ -10,9 +10,12 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
 from django.db.models import Q
-
 from itertools import chain
+from .models import Post, Like
+from . import forms
 
+class PostListView(LoginRequiredMixin, ListView):
+    template_name = 'post/post_list.html'
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
@@ -79,7 +82,6 @@ def delete_view(request, pk):
 
 class SearchPostListView(LoginRequiredMixin, ListView):
     template_name = 'post/search_list.html'
-    model = Post
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
