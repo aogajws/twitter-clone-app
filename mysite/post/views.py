@@ -11,11 +11,13 @@ from django.views.generic.edit import CreateView
 from django.contrib import messages
 from django.db.models import Q
 from itertools import chain
-from .models import Post, Like
+from .models import Post
 from . import forms
+
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
+
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
