@@ -1,6 +1,5 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -199,7 +198,7 @@ class FollowerListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
-        username = self.kwargs.get('username')
+        username = self.kwargs.get('username', "")
         qs = get_object_or_404(
             get_user_model(), username=username).followers.all()
         if q_word:
