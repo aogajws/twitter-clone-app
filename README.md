@@ -7,6 +7,7 @@ $ git clone https://github.com/aogajws/twitter-clone-app.git
 $ cd twitter-clone-app
 $ pip install -r requirements.txt
 $ cd mysite
+$ python mysite/generate_secretkey_setting.py
 $ python manage.py migrate
 $ python manage.py runserver
 ```

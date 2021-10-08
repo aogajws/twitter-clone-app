@@ -130,3 +130,4 @@ dmypy.json
 
 mysite/media/
 mysite/db.sqlite3
+__pycache__/
