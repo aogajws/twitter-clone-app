@@ -9,7 +9,7 @@
             <input class="form-control w-50" name="query" value="{{ request.GET.query }}" type="text" placeholder="ツイート検索">
             <button class="btn btn-outline-success w-10" type="submit">検索</button>
         </form>
-        {% for post, likes, liked in zip %}
+        {% for post, likes, liked, reply_count, repost_count in zip %}
             <ul class="list-unstyled">
                 <div class="row mt-2 border">
                     <div style="width: 100px;" class="col-2 my-1">
@@ -48,9 +48,15 @@
                                 </div>
                             </div>
                         {% endif %}
-                        <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
-                            <button type="button" class="btn btn-primary btn-sm">返信</button>
-                        </a>
+                        {% if reply_count %}
+                            <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
+                                <button type="button" class="btn btn-primary btn-sm">返信  {{ reply_count }}</button>
+                            </a>
+                        {% else %}
+                            <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
+                                <button type="button" class="btn btn-primary btn-sm">返信</button>
+                            </a>
+                        {% endif %}
                         {% if liked %}
                             <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
                                 <button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button>
@@ -60,9 +66,15 @@
                                 <button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ likes }}</button>
                             </a>
                         {% endif %}
-                        <a href="{% url "post:repost" post.pk %}" class="d-inline-block">
-                            <button type="button" class="btn btn-outline-success btn-sm">リツイート</button>
-                        </a>
+                        {% if repost_count %}
+                            <a href="{% url "post:repost" post.pk %}" class="d-inline-block">
+                                <button type="button" class="btn btn-outline-success btn-sm">リツイート {{ repost_count }}</button>
+                            </a>
+                        {% else %}
+                            <a href="{% url "post:repost" post.pk %}" class="d-inline-block">
+                                <button type="button" class="btn btn-outline-success btn-sm">リツイート</button>
+                            </a>
+                        {% endif %}
                         {% if post.author == request.user %}
                             <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2">
                                 <button type="button" class="btn btn-outline-danger btn-sm">削除</button>

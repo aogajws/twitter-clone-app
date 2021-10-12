@@ -31,12 +31,17 @@ class PostListView(LoginRequiredMixin, ListView):
         context['User'] = user
         context['description'] = 'タイムライン'
         liked_count = [None] * len(post_list)
+        reply_count = [None] * len(post_list)
+        repost_count = [None] * len(post_list)
         liked = [None] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
             liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+            reply_count[i] = post.replies.count()
+            repost_count[i] = post.reposted.count()
+        context['zip'] = zip(post_list, liked_count, liked,
+                             reply_count, repost_count)
         return context
 
     def get_queryset(self):
@@ -92,11 +97,16 @@ class SearchPostListView(LoginRequiredMixin, ListView):
         post_list = context['post_list']
         liked_count = [None] * len(post_list)
         liked = [None] * len(post_list)
+        reply_count = [None] * len(post_list)
+        repost_count = [None] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
             liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+            reply_count[i] = post.replies.count()
+            repost_count[i] = post.reposted.count()
+        context['zip'] = zip(post_list, liked_count, liked,
+                             reply_count, repost_count)
         return context
 
     def get_queryset(self):
@@ -123,21 +133,30 @@ class PostStatus(DetailView):
             liked_users = parent.liked_users
             context['parent_liked'] = user in liked_users.all()
             context['parent_likes'] = liked_users.count()
+            context['parent_reply_count'] = post.replies.count()
+            context['parent_repost_count'] = post.reposted.count()
         else:
             context['parent_post'] = None
         context['post'] = post
         liked_users = post.liked_users
         context['liked'] = user in liked_users.all()
         context['likes'] = liked_users.count()
+        context['reply_count'] = post.replies.count()
+        context['repost_count'] = post.reposted.count()
         reply_list = (post.replies.all() | post.reposted.all()
                       ).order_by('created_at')
         reply_liked_count = [None] * len(reply_list)
         reply_liked = [False] * len(reply_list)
+        reply_reply_count = [None] * len(reply_list)
+        reply_repost_count = [None] * len(reply_list)
         for i, reply in enumerate(reply_list):
             liked_users = reply.liked_users
             reply_liked_count[i] = liked_users.count()
             reply_liked[i] = user in liked_users.all()
-        context['zip'] = zip(reply_list, reply_liked_count, reply_liked)
+            reply_reply_count[i] = reply.replies.count()
+            reply_repost_count[i] = reply.reposted.count()
+        context['zip'] = zip(reply_list, reply_liked_count, reply_liked,
+                             reply_reply_count, reply_repost_count)
         return context
 
 
@@ -173,11 +192,16 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
         post_list = context['post_list']
         liked_count = [None] * len(post_list)
         liked = [False] * len(post_list)
+        reply_count = [False] * len(post_list)
+        repost_count = [False] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
             liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+            reply_count[i] = post.replies.count()
+            repost_count[i] = post.reposted.count()
+        context['zip'] = zip(post_list, liked_count, liked,
+                             reply_count, repost_count)
         return context
 
     def get_queryset(self):
