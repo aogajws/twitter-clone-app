@@ -1,3 +1,5 @@
+import hashlib
+import os.path
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
@@ -40,10 +42,15 @@ class UserManager(BaseUserManager):
         return self._create_user(username, email, password, **extra_fields)
 
 
+def get_image_path(instance, filename):
+    return "%s%s" % (hashlib.sha1((instance.username + filename).encode('utf-8')).hexdigest(), os.path.splitext(filename)[1])
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField("ユーザー名", max_length=25, unique=True)
     email = models.EmailField("メールアドレス", unique=True)
-    icon = models.ImageField("アイコン", blank=True, null=True)
+    icon = models.ImageField(
+        "アイコン", blank=True, null=True, upload_to=get_image_path)
     introduction = models.CharField(
         "自己紹介", max_length=75, blank=True, null=True)
     followers = models.ManyToManyField(

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ツイート{% endblock title %}
+{% block title %}{{ description }}{% endblock title %}
 {% block content %}
     {% if post %}
         <div class="row mt-2 border">
@@ -20,10 +20,8 @@
                 <h6 class="d-inline-block text-muted ms-2">{{ post.created_at }}</h6>
             </div>
         </div>
-        <p>返信の作成</p>
-    {% else %}
-        <p>ツイートの作成</p>
     {% endif %}
+    <p>{{ description }}</p>
     <form action="" method="POST">
         {% csrf_token %}
         {{ form.as_p }}

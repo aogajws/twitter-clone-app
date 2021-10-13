@@ -10,13 +10,14 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
 from django.db.models import Q
-from django.contrib.auth import get_user_model
 from itertools import chain
-from .models import Post, Like
+from .models import Post
 from . import forms
+
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
+
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
@@ -30,12 +31,17 @@ class PostListView(LoginRequiredMixin, ListView):
         context['User'] = user
         context['description'] = 'タイムライン'
         liked_count = [None] * len(post_list)
+        reply_count = [None] * len(post_list)
+        repost_count = [None] * len(post_list)
         liked = [None] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
             liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+            reply_count[i] = post.replies.count()
+            repost_count[i] = post.reposted.count()
+        context['zip'] = zip(post_list, liked_count, liked,
+                             reply_count, repost_count)
         return context
 
     def get_queryset(self):
@@ -50,6 +56,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     form_class = forms.PostCreationForm
     template_name = "post/post_create.html"
     success_url = reverse_lazy("post:post_list")
+    description = "ツイートの作成"
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -90,11 +97,16 @@ class SearchPostListView(LoginRequiredMixin, ListView):
         post_list = context['post_list']
         liked_count = [None] * len(post_list)
         liked = [None] * len(post_list)
+        reply_count = [None] * len(post_list)
+        repost_count = [None] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
             liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+            reply_count[i] = post.replies.count()
+            repost_count[i] = post.reposted.count()
+        context['zip'] = zip(post_list, liked_count, liked,
+                             reply_count, repost_count)
         return context
 
     def get_queryset(self):
@@ -121,27 +133,37 @@ class PostStatus(DetailView):
             liked_users = parent.liked_users
             context['parent_liked'] = user in liked_users.all()
             context['parent_likes'] = liked_users.count()
+            context['parent_reply_count'] = parent.replies.count()
+            context['parent_repost_count'] = parent.reposted.count()
         else:
             context['parent_post'] = None
         context['post'] = post
         liked_users = post.liked_users
         context['liked'] = user in liked_users.all()
         context['likes'] = liked_users.count()
-        reply_list = Post.objects.filter(parent=post)
+        context['reply_count'] = post.replies.count()
+        context['repost_count'] = post.reposted.count()
+        reply_list = (post.replies.all() | post.reposted.all()
+                      ).order_by('created_at')
         reply_liked_count = [None] * len(reply_list)
         reply_liked = [False] * len(reply_list)
+        reply_reply_count = [None] * len(reply_list)
+        reply_repost_count = [None] * len(reply_list)
         for i, reply in enumerate(reply_list):
             liked_users = reply.liked_users
             reply_liked_count[i] = liked_users.count()
             reply_liked[i] = user in liked_users.all()
-        context['zip'] = zip(reply_list, reply_liked_count, reply_liked)
+            reply_reply_count[i] = reply.replies.count()
+            reply_repost_count[i] = reply.reposted.count()
+        context['zip'] = zip(reply_list, reply_liked_count, reply_liked,
+                             reply_reply_count, reply_repost_count)
         return context
 
 
 def reply_create_view(request, pk):
     post = get_object_or_404(Post, pk=pk)
     form = forms.PostCreationForm(request.POST or None)
-
+    description = "返信の作成"
     if request.method == 'POST':
         reply = form.save(commit=False)
         reply.author = request.user
@@ -153,7 +175,8 @@ def reply_create_view(request, pk):
 
     context = {
         'form': form,
-        'post': post
+        'post': post,
+        'description': description,
     }
     return render(request, 'post/post_create.html', context)
 
@@ -169,22 +192,29 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
         post_list = context['post_list']
         liked_count = [None] * len(post_list)
         liked = [False] * len(post_list)
+        reply_count = [False] * len(post_list)
+        repost_count = [False] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
             liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+            reply_count[i] = post.replies.count()
+            repost_count[i] = post.reposted.count()
+        context['zip'] = zip(post_list, liked_count, liked,
+                             reply_count, repost_count)
         return context
 
     def get_queryset(self):
-        qs = Post.objects.filter(
-            Q(content__contains="@" + self.request.user.username + " ") |
-            Q(content__contains="@" + self.request.user.username + "　") |
-            Q(content__contains="@" + self.request.user.username + "\n") |
-            Q(content__contains="@" + self.request.user.username + "\r") |
-            Q(content__endswith="@" + self.request.user.username)
-        ).order_by('-created_at')
-        return qs
+        user = self.request.user
+        username = user.username
+        qs = Post.objects.filter(content__contains="@" + username).filter(
+            Q(content__contains="@" + username + " ") |
+            Q(content__contains="@" + username + "　") |
+            Q(content__contains="@" + username + "\n") |
+            Q(content__contains="@" + username + "\r") |
+            Q(content__endswith="@" + username)
+        )
+        return qs.order_by('-created_at')
 
 
 class LikedAccountsListView(LoginRequiredMixin, ListView):
@@ -199,8 +229,27 @@ class LikedAccountsListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         post = get_object_or_404(Post, pk=self.kwargs['pk'])
-        # qs = get_user_model().like_set.filter(post=post)
         qs = post.liked_users.all()
         if q_word:
             qs = qs.filter(username__contains=q_word)
         return qs
+
+
+def repost_create_view(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    form = forms.PostCreationForm(request.POST or None)
+    description = "リツイートの作成"
+    if request.method == 'POST':
+        repost = form.save(commit=False)
+        repost.author = request.user
+        repost.repost_parent = post
+        repost.save()
+        messages.success(request, 'リツイートしました。')
+        return redirect('post:post_list')
+
+    context = {
+        'form': form,
+        'post': post,
+        'description': description,
+    }
+    return render(request, 'post/post_create.html', context)

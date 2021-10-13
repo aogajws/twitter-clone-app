@@ -98,13 +98,18 @@ def user_profile_view(request, username):
         author__username=username).order_by('-created_at')
     liked = [None] * len(post_list)
     liked_count = [None] * len(post_list)
+    reply_count = [None] * len(post_list)
+    repost_count = [None] * len(post_list)
     for i, post in enumerate(post_list):
         liked_users = post.liked_users
         liked_count[i] = liked_users.count()
         liked[i] = me in liked_users.all()
+        reply_count[i] = post.replies.count()
+        repost_count[i] = post.reposted.count()
     context = {
         'User': user,
-        'zip': zip(post_list, liked_count, liked),
+        'zip': zip(post_list, liked_count, liked,
+                   reply_count, repost_count),
         'is_following': is_following,
         'followers': followers,
         'follower_count': follower_count,

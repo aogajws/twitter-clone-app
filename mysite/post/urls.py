@@ -9,6 +9,7 @@ urlpatterns = [
     path('replies/', views.ReplyPostListView.as_view(), name='replies'),
     path('status/<int:pk>/', views.PostStatus.as_view(), name='status'),
     path('reply/<int:pk>/', views.reply_create_view, name='reply'),
+    path('repost/<int:pk>/', views.repost_create_view, name='repost'),
     path('favorite/<int:pk>/', views.favorite_view, name='favorite'),
     path('delete/<int:pk>/', views.delete_view, name='delete'),
     path('favorited/<int:pk>/',
