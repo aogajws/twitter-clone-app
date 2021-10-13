@@ -1,6 +1,8 @@
 from django.db import models
 
 # Create your models here.
+
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 
@@ -12,3 +14,9 @@ class Post(models.Model):
 
     def __str__(self):
         return self.content
+
+
+class Like(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(default=timezone.now)
