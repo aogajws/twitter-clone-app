@@ -1,14 +1,15 @@
 from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 # Create your views here.
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.views.generic import TemplateView, CreateView, ListView
 from django.urls import reverse_lazy
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login, authenticate
 
 from . import forms
-from post.models import Post, Like
+from post.models import Post
 from .forms import UpLoadProfileImgForm
 
 
@@ -25,6 +26,11 @@ class MyLoginView(LoginView):
 class MyLogoutView(LoginRequiredMixin, LogoutView):
     template_name = "accounts/logout.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        messages.warning(request, 'ログアウトしました。')
+        return response
+
 
 class IndexView(TemplateView):
     template_name = "accounts/index.html"
@@ -33,11 +39,15 @@ class IndexView(TemplateView):
 class UserCreateView(CreateView):
     form_class = forms.CustomUserCreationForm
     template_name = "accounts/create.html"
-    success_url = reverse_lazy("accounts:login")
+    success_url = reverse_lazy("post:post_list")
 
     def form_valid(self, form):
         result = super().form_valid(form)
         messages.success(self.request, 'アカウントを作成しました。')
+        username = form.cleaned_data.get("username")
+        raw_pw = form.cleaned_data.get("password1")
+        user = authenticate(username=username, password=raw_pw)
+        login(self.request, user)
         return result
 
 
@@ -84,19 +94,17 @@ def user_profile_view(request, username):
     follower_count = followers.count()
     followings = user.following.all()
     following_count = followings.count()
-    postlist = Post.objects.filter(
+    post_list = Post.objects.filter(
         author__username=username).order_by('-created_at')
-    liked_set = set()
-    liked_count = [None] * len(postlist)
-    for i, post in enumerate(postlist):
-        if post.like_set.filter(user=me).exists():
-            liked_set.add(post.pk)
-        liked_count[i] = Like.objects.filter(post=post).count()
+    liked = [None] * len(post_list)
+    liked_count = [None] * len(post_list)
+    for i, post in enumerate(post_list):
+        liked_users = post.liked_users
+        liked_count[i] = liked_users.count()
+        liked[i] = me in liked_users.all()
     context = {
         'User': user,
-        'post_list': postlist,
-        'liked_set': liked_set,
-        'liked_count': liked_count,
+        'zip': zip(post_list, liked_count, liked),
         'is_following': is_following,
         'followers': followers,
         'follower_count': follower_count,
@@ -143,7 +151,6 @@ def edit_profile_icon(request):
 
 class AccountsListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -161,7 +168,6 @@ class AccountsListView(LoginRequiredMixin, ListView):
 
 class FollowingListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -182,7 +188,6 @@ class FollowingListView(LoginRequiredMixin, ListView):
 
 class FollowerListView(LoginRequiredMixin, ListView):
     template_name = 'accounts/account_list.html'
-    model = get_user_model()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
