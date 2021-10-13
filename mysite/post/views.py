@@ -133,8 +133,8 @@ class PostStatus(DetailView):
             liked_users = parent.liked_users
             context['parent_liked'] = user in liked_users.all()
             context['parent_likes'] = liked_users.count()
-            context['parent_reply_count'] = post.replies.count()
-            context['parent_repost_count'] = post.reposted.count()
+            context['parent_reply_count'] = parent.replies.count()
+            context['parent_repost_count'] = parent.reposted.count()
         else:
             context['parent_post'] = None
         context['post'] = post
