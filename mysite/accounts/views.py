@@ -6,6 +6,7 @@ from django.views.generic.edit import FormView
 from django.views.generic import TemplateView, CreateView, ListView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404, render, redirect
 
 from . import forms
 from post.models import Post, Like

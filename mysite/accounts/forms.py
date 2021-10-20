@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.forms import ModelForm
 from django import forms
+from django.shortcuts import get_object_or_404
 
 
 class LoginForm(AuthenticationForm):
@@ -36,7 +37,7 @@ class UserChangeForm(ModelForm):
     def __init__(self, username=None, email=None, introduction=None, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         if username:
-            user = get_user_model().objects.get(username=username)
+            user = get_object_or_404(get_user_model(), username=username)
             super().__init__(instance=user, *args, **kwargs)
         else:
             super().__init__(*args, **kwargs)
