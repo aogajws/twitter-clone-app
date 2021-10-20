@@ -15,6 +15,7 @@ from itertools import chain
 from .models import Post, Like
 from . import forms
 
+
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
 
