@@ -94,8 +94,8 @@ def user_profile_view(request, username):
     follower_count = followers.count()
     followings = user.following.all()
     following_count = followings.count()
-    post_list = Post.objects.filter(
-        author__username=username).prefetch_related('liked_users').order_by('-created_at')
+    post_list = Post.objects.filter(author__username=username).prefetch_related(
+        'liked_users').prefetch_related('replies').prefetch_related('reposted').order_by('-created_at')
     liked = [None] * len(post_list)
     liked_count = [None] * len(post_list)
     reply_count = [None] * len(post_list)

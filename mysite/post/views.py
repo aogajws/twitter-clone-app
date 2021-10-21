@@ -2,8 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 
-from .models import Post
-from . import forms
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
@@ -22,8 +20,8 @@ class PostListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        post_list = Post.objects.filter(author__in=chain(
-            user.following.all(), [user])).prefetch_related('liked_users').order_by('-created_at')
+        post_list = Post.objects.filter(author__in=chain(user.following.all(), [user])).prefetch_related(
+            'liked_users').prefetch_related('replies').prefetch_related('reposted').order_by('-created_at')
         context['User'] = user
         context['description'] = 'タイムライン'
         liked_count = [None] * len(post_list)
@@ -107,7 +105,8 @@ class SearchPostListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
-        qs = Post.objects.all().prefetch_related('liked_users').order_by('-created_at')
+        qs = Post.objects.all().prefetch_related('liked_users').prefetch_related(
+            'replies').prefetch_related('reposted').order_by('-created_at')
         if q_word:
             qs = qs.filter(content__contains=q_word)
         return qs
@@ -140,7 +139,7 @@ class PostStatus(DetailView):
         context['reply_count'] = post.replies.count()
         context['repost_count'] = post.reposted.count()
         reply_list = (post.replies.all() | post.reposted.all()
-                      ).order_by('created_at')
+                      ).prefetch_related('replies').prefetch_related('reposted').order_by('created_at')
         reply_liked_count = [None] * len(reply_list)
         reply_liked = [False] * len(reply_list)
         reply_reply_count = [None] * len(reply_list)
@@ -208,7 +207,8 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
             Q(content__contains="@" + username + "\n") |
             Q(content__contains="@" + username + "\r") |
             Q(content__endswith="@" + username)
-        ).prefetch_related('liked_users').order_by('-created_at')
+        ).prefetch_related('liked_users').prefetch_related(
+            'replies').prefetch_related('reposted').order_by('-created_at')
         return qs
 
 
@@ -224,7 +224,7 @@ class LikedAccountsListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         post = get_object_or_404(Post, pk=self.kwargs['pk'])
-        qs = post.liked_users.all()
+        qs = post.liked_users.all().prefetch_related('following')
         if q_word:
             qs = qs.filter(username__contains=q_word)
         return qs
