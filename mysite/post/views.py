@@ -17,17 +17,13 @@ from . import forms
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
-
-
-class PostListView(LoginRequiredMixin, ListView):
-    template_name = 'post/post_list.html'
     model = Post
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         post_list = Post.objects.filter(author__in=chain(
-            user.following.all(), [user])).order_by('-created_at')
+            user.following.all(), [user])).prefetch_related('liked_users').order_by('-created_at')
         context['User'] = user
         context['description'] = 'タイムライン'
         liked_count = [None] * len(post_list)
@@ -111,7 +107,7 @@ class SearchPostListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
-        qs = Post.objects.all().order_by('-created_at')
+        qs = Post.objects.all().prefetch_related('liked_users').order_by('-created_at')
         if q_word:
             qs = qs.filter(content__contains=q_word)
         return qs
@@ -205,16 +201,15 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
         return context
 
     def get_queryset(self):
-        user = self.request.user
-        username = user.username
-        qs = Post.objects.filter(content__contains="@" + username).filter(
+        username = self.request.user.username
+        qs = Post.objects.filter(
             Q(content__contains="@" + username + " ") |
             Q(content__contains="@" + username + "　") |
             Q(content__contains="@" + username + "\n") |
             Q(content__contains="@" + username + "\r") |
             Q(content__endswith="@" + username)
-        )
-        return qs.order_by('-created_at')
+        ).prefetch_related('liked_users').order_by('-created_at')
+        return qs
 
 
 class LikedAccountsListView(LoginRequiredMixin, ListView):
