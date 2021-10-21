@@ -10,13 +10,10 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
 from django.db.models import Q
-from django.contrib.auth import get_user_model
 from itertools import chain
-from .models import Post, Like
+from .models import Post
 from . import forms
 
-class PostListView(LoginRequiredMixin, ListView):
-    template_name = 'post/post_list.html'
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
@@ -26,7 +23,7 @@ class PostListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         post_list = Post.objects.filter(author__in=chain(
-            user.following.all(), [user])).order_by('-created_at')
+            user.following.all(), [user])).prefetch_related('liked_users').order_by('-created_at')
         context['User'] = user
         context['description'] = 'タイムライン'
         liked_count = [None] * len(post_list)
@@ -99,7 +96,7 @@ class SearchPostListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
-        qs = Post.objects.all().order_by('-created_at')
+        qs = Post.objects.all().prefetch_related('liked_users').order_by('-created_at')
         if q_word:
             qs = qs.filter(content__contains=q_word)
         return qs
@@ -127,7 +124,8 @@ class PostStatus(DetailView):
         liked_users = post.liked_users
         context['liked'] = user in liked_users.all()
         context['likes'] = liked_users.count()
-        reply_list = Post.objects.filter(parent=post)
+        reply_list = Post.objects.filter(
+            parent=post).prefetch_related('liked_users')
         reply_liked_count = [None] * len(reply_list)
         reply_liked = [False] * len(reply_list)
         for i, reply in enumerate(reply_list):
@@ -183,7 +181,7 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
             Q(content__contains="@" + self.request.user.username + "\n") |
             Q(content__contains="@" + self.request.user.username + "\r") |
             Q(content__endswith="@" + self.request.user.username)
-        ).order_by('-created_at')
+        ).prefetch_related('liked_users').order_by('-created_at')
         return qs
 
 
@@ -199,7 +197,6 @@ class LikedAccountsListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         post = get_object_or_404(Post, pk=self.kwargs['pk'])
-        # qs = get_user_model().like_set.filter(post=post)
         qs = post.liked_users.all()
         if q_word:
             qs = qs.filter(username__contains=q_word)
