@@ -14,12 +14,6 @@ from itertools import chain
 from .models import Post
 from . import forms
 
-<<<<<<< HEAD
-=======
-
-class PostListView(LoginRequiredMixin, ListView):
-    template_name = 'post/post_list.html'
->>>>>>> e6b79fc0d55002ff135bc071258e901aa914e0f6
 
 class PostListView(LoginRequiredMixin, ListView):
     template_name = 'post/post_list.html'
