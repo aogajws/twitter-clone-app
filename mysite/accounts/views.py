@@ -68,6 +68,7 @@ class UserChangeView(LoginRequiredMixin, FormView):
 
 
 class UserPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
+    form_class = forms.UserPasswordChangeForm
     template_name = 'accounts/password_change.html'
 
     def get_success_url(self):
