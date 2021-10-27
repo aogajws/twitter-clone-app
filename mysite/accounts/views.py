@@ -68,6 +68,8 @@ class UserChangeView(LoginRequiredMixin, FormView):
 
 
 class UserPasswordChangeView(PasswordChangeView):
+    template_name = 'accounts/password_change.html'
+
     def get_success_url(self):
         return reverse_lazy('accounts:profile', args=[self.request.user.username])
 
