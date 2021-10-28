@@ -102,7 +102,7 @@ class SearchPostListView(LoginRequiredMixin, ListView):
         return qs
 
 
-class PostStatus(DetailView):
+class PostStatusView(DetailView):
     template_name = 'post/post_status.html'
     model = Post
 
