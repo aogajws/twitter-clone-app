@@ -16,7 +16,6 @@ class UserManager(BaseUserManager):
 
         if not email:
             raise ValueError('The given email must be set')
-
         user = self.model(username=self.model.normalize_username(
             username), email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
@@ -44,8 +43,9 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField("ユーザー名", max_length=25, unique=True)
     email = models.EmailField("メールアドレス", unique=True)
-    icon = models.ImageField(blank=True, null=True)
-    introduction = models.CharField(max_length=75, blank=True, null=True)
+    icon = models.ImageField("アイコン", blank=True, null=True)
+    introduction = models.CharField(
+        "自己紹介", max_length=75, blank=True, null=True)
     followers = models.ManyToManyField(
         'self', related_name='following', blank=True, symmetrical=False)
     is_staff = models.BooleanField(
