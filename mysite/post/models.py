@@ -11,7 +11,7 @@ class Post(models.Model):
     author = models.ForeignKey(get_user_model(), verbose_name='author',
                                on_delete=models.CASCADE)
     parent = models.ForeignKey('self', blank=True, null=True, related_name='replies',
-                               on_delete=models.CASCADE)
+                               on_delete=models.SET_NULL)
     liked_users = models.ManyToManyField(
         get_user_model(), related_name='favorite_posts', blank=True, symmetrical=False)
 

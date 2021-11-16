@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When
 from itertools import chain
 from .models import Post
 from . import forms
@@ -23,16 +23,13 @@ class PostListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         post_list = Post.objects.filter(author__in=chain(
-            user.following.all(), [user])).prefetch_related('liked_users').order_by('-created_at')
+            user.following.all(), [user])).prefetch_related('liked_users').order_by('-created_at').annotate(liked_count=Count("liked_users"))
         context['User'] = user
         context['description'] = 'タイムライン'
-        liked_count = [None] * len(post_list)
         liked = [None] * len(post_list)
         for i, post in enumerate(post_list):
-            liked_users = post.liked_users
-            liked_count[i] = liked_users.count()
-            liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+            liked[i] = user in post.liked_users.all()
+        context['zip'] = zip(post_list, liked)
         return context
 
     def get_queryset(self):
@@ -85,18 +82,17 @@ class SearchPostListView(LoginRequiredMixin, ListView):
         user = self.request.user
         context['User'] = user
         post_list = context['post_list']
-        liked_count = [None] * len(post_list)
         liked = [None] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
-            liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+        context['zip'] = zip(post_list, liked)
         return context
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
-        qs = Post.objects.all().prefetch_related('liked_users').order_by('-created_at')
+        qs = Post.objects.all().prefetch_related('liked_users').order_by(
+            '-created_at').annotate(liked_count=Count("liked_users"))
         if q_word:
             qs = qs.filter(content__contains=q_word)
         return qs
@@ -123,16 +119,13 @@ class PostStatusView(DetailView):
         context['post'] = post
         liked_users = post.liked_users
         context['liked'] = user in liked_users.all()
-        context['likes'] = liked_users.count()
         reply_list = Post.objects.filter(
-            parent=post).prefetch_related('liked_users')
-        reply_liked_count = [None] * len(reply_list)
+            parent=post).prefetch_related('liked_users').annotate(liked_count=Count("liked_users"))
         reply_liked = [False] * len(reply_list)
         for i, reply in enumerate(reply_list):
             liked_users = reply.liked_users
-            reply_liked_count[i] = liked_users.count()
             reply_liked[i] = user in liked_users.all()
-        context['zip'] = zip(reply_list, reply_liked_count, reply_liked)
+        context['zip'] = zip(reply_list, reply_liked)
         return context
 
 
@@ -165,13 +158,11 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
         user = self.request.user
         context['User'] = user
         post_list = context['post_list']
-        liked_count = [None] * len(post_list)
         liked = [False] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
-            liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-        context['zip'] = zip(post_list, liked_count, liked)
+        context['zip'] = zip(post_list, liked)
         return context
 
     def get_queryset(self):
@@ -181,7 +172,7 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
             Q(content__contains="@" + self.request.user.username + "\n") |
             Q(content__contains="@" + self.request.user.username + "\r") |
             Q(content__endswith="@" + self.request.user.username)
-        ).prefetch_related('liked_users').order_by('-created_at')
+        ).prefetch_related('liked_users').order_by('-created_at').annotate(liked_count=Count("liked_users"))
         return qs
 
 

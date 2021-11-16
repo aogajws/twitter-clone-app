@@ -7,6 +7,7 @@ from django.views.generic.edit import FormView
 from django.views.generic import TemplateView, CreateView, ListView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model, login, authenticate
+from django.db.models import Count
 
 from . import forms
 from post.models import Post
@@ -95,16 +96,14 @@ def user_profile_view(request, username):
     followings = user.following.all()
     following_count = followings.count()
     post_list = Post.objects.filter(
-        author__username=username).prefetch_related('liked_users').order_by('-created_at')
+        author__username=username).prefetch_related('liked_users').order_by('-created_at').annotate(liked_count=Count("liked_users"))
     liked = [None] * len(post_list)
-    liked_count = [None] * len(post_list)
     for i, post in enumerate(post_list):
         liked_users = post.liked_users
-        liked_count[i] = liked_users.count()
         liked[i] = me in liked_users.all()
     context = {
         'User': user,
-        'zip': zip(post_list, liked_count, liked),
+        'zip': zip(post_list, liked),
         'is_following': is_following,
         'followers': followers,
         'follower_count': follower_count,

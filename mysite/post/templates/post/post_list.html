@@ -5,7 +5,7 @@
 {% block title %}タイムライン{% endblock title %}
 {% block content %}
     {% if request.user.is_authenticated  %}
-        {% for post, likes, liked in zip %}
+        {% for post, liked in zip %}
             <ul class="list-unstyled">
                 <div class="row mt-2 border">
                     <div style="width: 100px;" class="col-2 my-1">
@@ -27,11 +27,11 @@
                         </a>
                         {% if liked %}
                             <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
-                                <button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button>
+                                <button type="button" class="btn btn-warning btn-sm">☆いいね {{ post.liked_count }}</button>
                             </a>
                         {% else %}
                             <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
-                                <button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ likes }}</button>
+                                <button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ post.liked_count }}</button>
                             </a>
                         {% endif %}
                         {% if post.author == request.user %}
