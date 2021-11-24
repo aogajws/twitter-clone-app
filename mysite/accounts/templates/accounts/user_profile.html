@@ -40,7 +40,7 @@
         </div>
         <div class="col-9 p-3" id="user_post">
             <h2>@{{ User.username }}さんのTweet一覧</h2>
-            {% for post,likes in post_list|zip:liked_count %}
+            {% for post, liked in zip %}
                 <ul class="list-unstyled">
                     <div class="row mt-2 border">
                         <div style="width: 100px;" class="col-2 my-1">
@@ -57,20 +57,31 @@
                             <p class="text-break">
                                 {{ post.content | linebreaksbr | urlize }}
                             </p>
-                            {% if post.pk in liked_set %}
-                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-warning btn-sm">☆いいね {{ likes }}</button></a>
+                            <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
+                                <button type="button" class="btn btn-primary btn-sm">返信</button>
+                            </a>
+                            {% if liked %}
+                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
+                                    <button type="button" class="btn btn-warning btn-sm">☆いいね {{ post.liked_count }}</button>
+                                </a>
                             {% else %}
-                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block"><button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ likes }}</button></a>
+                                <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
+                                    <button type="button" class="btn btn-outline-warning btn-sm">☆いいね {{ post.liked_count }}</button>
+                                </a>
                             {% endif %}
                             {% if post.author == request.user %}
-                                <a href="{% url "post:delete" post.pk %}" class="d-inline-block ms-2"><button type="button" class="btn btn-outline-danger btn-sm">削除</button></a>
+                                <a href="{% url "post:delete" post.pk %}" class="d-inline-block">
+                                    <button type="button" class="btn btn-outline-danger btn-sm">削除</button>
+                                </a>
                             {% endif %}
-                            <h6 class="d-inline-block text-muted ms-2">{{ post.created_at }}</h6>
+                            <a href="{% url "post:status" post.pk %}" class="d-inline-block text-muted ms-2">
+                                <h6 class="">{{ post.created_at }}</h6>
+                            </a>
                         </div>
                     </div>
                 </ul>
             {% empty %}
-                <h5>Tweetはまだありません</h5>
+                <h5>Tweetがまだありません</h5>
             {% endfor %}
         </div>
     </div>

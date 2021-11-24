@@ -19,6 +19,11 @@
                 {% if request.user.is_authenticated  %}
                     <ul class="navbar-nav">
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'post:replies' %}">Reply</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'post:search' %}">Tweet検索</a>
                         </li>
                     </ul>
