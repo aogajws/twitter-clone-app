@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.forms import ModelForm
 from django import forms
 from django.shortcuts import get_object_or_404
@@ -64,6 +64,14 @@ class UserChangeForm(ModelForm):
             user.introduction = self.cleaned_data['introduction']
             fields.append('introduction')
         user.save(update_fields=fields)
+
+
+class UserPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['placeholder'] = field.label
+            field.widget.attrs['class'] = 'form-control'
 
 
 class UpLoadProfileImgForm(forms.Form):

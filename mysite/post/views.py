@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Count
 from itertools import chain
 from .models import Post
 from . import forms
@@ -20,28 +20,22 @@ class PostListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        post_list = Post.objects.filter(author__in=chain(user.following.all(), [user])).prefetch_related(
-            'liked_users').prefetch_related('replies').prefetch_related('reposted').order_by('-created_at')
         context['User'] = user
+        post_list = Post.objects.filter(author__in=chain(user.following.all(), [user])).prefetch_related(
+            'liked_users').prefetch_related('replies').prefetch_related('reposted').order_by('-created_at').annotate(
+                liked_count=Count("liked_users")).annotate(reply_count=Count("replies")).annotate(repost_count=Count("reposted"))
         context['description'] = 'タイムライン'
-        liked_count = [None] * len(post_list)
-        reply_count = [None] * len(post_list)
-        repost_count = [None] * len(post_list)
         liked = [None] * len(post_list)
         for i, post in enumerate(post_list):
-            liked_users = post.liked_users
-            liked_count[i] = liked_users.count()
-            liked[i] = user in liked_users.all()
-            reply_count[i] = post.replies.count()
-            repost_count[i] = post.reposted.count()
-        context['zip'] = zip(post_list, liked_count, liked,
-                             reply_count, repost_count)
+            liked[i] = user in post.liked_users.all()
+        context['zip'] = zip(post_list, liked)
         return context
 
     def get_queryset(self):
         user = self.request.user
         qs = Post.objects.filter(author__in=chain(
-            user.following.all(), [user])).order_by('-created_at')
+            user.following.all(), [user])).order_by('-created_at').annotate(
+                liked_count=Count("liked_users")).annotate(reply_count=Count("replies")).annotate(repost_count=Count("reposted"))
         return qs
 
 
@@ -89,30 +83,23 @@ class SearchPostListView(LoginRequiredMixin, ListView):
         user = self.request.user
         context['User'] = user
         post_list = context['post_list']
-        liked_count = [None] * len(post_list)
         liked = [None] * len(post_list)
-        reply_count = [None] * len(post_list)
-        repost_count = [None] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
-            liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-            reply_count[i] = post.replies.count()
-            repost_count[i] = post.reposted.count()
-        context['zip'] = zip(post_list, liked_count, liked,
-                             reply_count, repost_count)
+        context['zip'] = zip(post_list, liked)
         return context
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
-        qs = Post.objects.all().prefetch_related('liked_users').prefetch_related(
-            'replies').prefetch_related('reposted').order_by('-created_at')
+        qs = Post.objects.all().prefetch_related('liked_users').order_by(
+            '-created_at').annotate(liked_count=Count("liked_users")).annotate(reply_count=Count("replies")).annotate(repost_count=Count("reposted"))
         if q_word:
             qs = qs.filter(content__contains=q_word)
         return qs
 
 
-class PostStatus(DetailView):
+class PostStatusView(DetailView):
     template_name = 'post/post_status.html'
     model = Post
 
@@ -134,24 +121,19 @@ class PostStatus(DetailView):
             context['parent_post'] = None
         context['post'] = post
         liked_users = post.liked_users
-        context['liked'] = user in liked_users.all()
         context['likes'] = liked_users.count()
         context['reply_count'] = post.replies.count()
         context['repost_count'] = post.reposted.count()
+        liked_users = post.liked_users
+        context['liked'] = user in liked_users.all()
         reply_list = (post.replies.all() | post.reposted.all()
-                      ).prefetch_related('replies').prefetch_related('reposted').order_by('created_at')
-        reply_liked_count = [None] * len(reply_list)
-        reply_liked = [False] * len(reply_list)
-        reply_reply_count = [None] * len(reply_list)
-        reply_repost_count = [None] * len(reply_list)
+                      ).prefetch_related('liked_users').prefetch_related('replies').prefetch_related('reposted').annotate(
+            liked_count=Count("liked_users")).annotate(reply_count=Count("replies")).annotate(repost_count=Count("reposted"))
+        reply_liked = [None] * len(reply_list)
         for i, reply in enumerate(reply_list):
             liked_users = reply.liked_users
-            reply_liked_count[i] = liked_users.count()
             reply_liked[i] = user in liked_users.all()
-            reply_reply_count[i] = reply.replies.count()
-            reply_repost_count[i] = reply.reposted.count()
-        context['zip'] = zip(reply_list, reply_liked_count, reply_liked,
-                             reply_reply_count, reply_repost_count)
+        context['zip'] = zip(reply_list, reply_liked)
         return context
 
 
@@ -185,18 +167,11 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
         user = self.request.user
         context['User'] = user
         post_list = context['post_list']
-        liked_count = [None] * len(post_list)
         liked = [False] * len(post_list)
-        reply_count = [False] * len(post_list)
-        repost_count = [False] * len(post_list)
         for i, post in enumerate(post_list):
             liked_users = post.liked_users
-            liked_count[i] = liked_users.count()
             liked[i] = user in liked_users.all()
-            reply_count[i] = post.replies.count()
-            repost_count[i] = post.reposted.count()
-        context['zip'] = zip(post_list, liked_count, liked,
-                             reply_count, repost_count)
+        context['zip'] = zip(post_list, liked)
         return context
 
     def get_queryset(self):
@@ -207,8 +182,7 @@ class ReplyPostListView(LoginRequiredMixin, ListView):
             Q(content__contains="@" + username + "\n") |
             Q(content__contains="@" + username + "\r") |
             Q(content__endswith="@" + username)
-        ).prefetch_related('liked_users').prefetch_related(
-            'replies').prefetch_related('reposted').order_by('-created_at')
+        ).prefetch_related('liked_users').order_by('-created_at').annotate(liked_count=Count("liked_users")).annotate(reply_count=Count("replies")).annotate(repost_count=Count("reposted"))
         return qs
 
 

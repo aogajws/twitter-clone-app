@@ -4,7 +4,7 @@
 {% block title %}タイムライン{% endblock title %}
 {% block content %}
     {% if request.user.is_authenticated  %}
-        {% for post, likes, liked, reply_count, repost_count in zip %}
+        {% for post, liked in zip %}
             <ul class="list-unstyled">
                 <div class="row mt-2 border">
                     <div style="width: 100px;" class="col-2 my-1">
@@ -44,15 +44,15 @@
                             </div>
                         {% endif %}
                         <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
-                            <button type="button" class="btn btn-primary btn-sm">返信{% if reply_count %}  {{ reply_count }}{% endif %}</button>
+                            <button type="button" class="btn btn-primary btn-sm">返信{% if post.reply_count %}  {{ post.reply_count }}{% endif %}</button>
                         </a>
                         <a href="{% url "post:repost" post.pk %}" class="d-inline-block">
-                            <button type="button" class="btn btn-outline-success btn-sm">リツイート{% if repost_count %} {{ repost_count }}{% endif %}</button>
+                            <button type="button" class="btn btn-outline-success btn-sm">リツイート{% if post.repost_count %} {{ post.repost_count }}{% endif %}</button>
                         </a>
                         <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
-                        {% if liked %}<button type="button" class="btn btn-warning btn-sm">{% else %}<button type="button" class="btn btn-outline-warning btn-sm">{% endif %}
-                            ☆いいね{% if likes %} {{ likes }}{% endif %}
-                        </button>
+                            {% if liked %}<button type="button" class="btn btn-warning btn-sm">{% else %}<button type="button" class="btn btn-outline-warning btn-sm">{% endif %}
+                                ☆いいね{% if post.liked_count %} {{ post.liked_count }}{% endif %}
+                            </button>
                         </a>
                         {% if post.author == request.user %}
                             <a href="{% url "post:delete" post.pk %}" class="d-inline-block">
