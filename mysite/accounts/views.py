@@ -99,7 +99,8 @@ def user_profile_view(request, username):
     followings = user.following.all()
     following_count = followings.count()
     post_list = Post.objects.filter(
-        author__username=username).prefetch_related('liked_users').order_by('-created_at').annotate(liked_count=Count("liked_users"))
+        author__username=username).prefetch_related('liked_users').prefetch_related('replies').prefetch_related('reposted').order_by('-created_at').annotate(
+            liked_count=Count("liked_users")).annotate(reply_count=Count("replies")).annotate(repost_count=Count("reposted"))
     liked = [None] * len(post_list)
     for i, post in enumerate(post_list):
         liked_users = post.liked_users

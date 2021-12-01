@@ -14,6 +14,8 @@ class Post(models.Model):
                                on_delete=models.SET_NULL)
     liked_users = models.ManyToManyField(
         get_user_model(), related_name='favorite_posts', blank=True, symmetrical=False)
+    repost_parent = models.ForeignKey('self', blank=True, null=True, related_name='reposted',
+                                      on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.content
