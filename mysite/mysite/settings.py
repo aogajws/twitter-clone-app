@@ -11,14 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-import os
 from django.contrib.messages import constants as messages
-from django.contrib.messages import constants as message_constants
-
-try:
-    from .local_settings import *
-except ImportError:
-    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -63,7 +56,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,28 +121,36 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'accounts:login'  # ログインしていないときのリダイレクト先
+LOGIN_URL = 'accounts:login'           # 未ログイン時のリダイレクト先
 LOGIN_REDIRECT_URL = 'post:post_list'  # ログイン後のリダイレクト先
-LOGOUT_REDIRECT_URL = 'post:post_list'  # ログアウト後のリダイレクト先
+LOGOUT_REDIRECT_URL = 'post:post_list' # ログアウト後のリダイレクト先
 
 AUTH_USER_MODEL = 'accounts.User'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 MESSAGE_TAGS = {
-    messages.ERROR: 'alert alert-danger',
+    messages.ERROR:   'alert alert-danger',
     messages.WARNING: 'alert alert-warning',
     messages.SUCCESS: 'alert alert-success',
-    messages.INFO: 'alert alert-info'
+    messages.INFO:    'alert alert-info',
 }
-MESSAGE_LEVEL = message_constants.DEBUG
+# DEBUG レベルは開発時にのみ使用。本番では INFO 以上のみ表示される。
+MESSAGE_LEVEL = messages.INFO
+
+# ローカル設定（DEBUG フラグや SECRET_KEY など環境固有の値）は
+# local_settings.py に記述してデフォルト値を上書きする。
+# このインポートは必ずファイル末尾に置くこと。
+try:
+    from .local_settings import *  # noqa: F401, F403
+except ImportError:
+    pass

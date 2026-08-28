@@ -52,9 +52,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     icon = models.ImageField(
         "アイコン", blank=True, null=True, upload_to=get_image_path)
     introduction = models.CharField(
-        "自己紹介", max_length=75, blank=True, null=True)
+        "自己紹介", max_length=75, blank=True, default='')
     followers = models.ManyToManyField(
-        'self', related_name='following', blank=True, symmetrical=False)
+        'self', verbose_name="フォロワー", related_name='following', blank=True, symmetrical=False)
     is_staff = models.BooleanField(
         _('staff status'),
         default=False,
@@ -69,7 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             'Unselect this instead of deleting accounts.'
         ),
     )
-    date_joined = models.DateTimeField(default=timezone.now)
+    date_joined = models.DateTimeField("登録日時", default=timezone.now)
     objects = UserManager()
 
     EMAIL_FIELD = 'email'
@@ -79,3 +79,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
+
+    def __str__(self):
+        return self.username

@@ -13,7 +13,7 @@
                 {% endif %}
             </div>
             <div class="col my-1">
-                <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
+                <h4><a class="text-dark" href="{% url 'accounts:profile' post.author.username %}">@{{ post.author }}</a></h4>
                 <p class="text-break">
                     {{ post.content | linebreaksbr | urlize }}
                 </p>
@@ -21,7 +21,7 @@
             </div>
         </div>
     {% endif %}
-    <p>{{ description }}</p>
+    <h1 class="h4 mt-3">{{ description }}</h1>
     <form action="" method="POST">
         {% csrf_token %}
         {{ form.as_p }}
@@ -30,10 +30,17 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript">
+    <script>
+        // テキストエリアにフォーカスを当て、カーソルを末尾に移動
         var q = document.getElementById('id_content');
         var len = q.value.length;
         q.focus();
         q.setSelectionRange(len, len);
+        // Ctrl+Enter で送信
+        q.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                document.getElementById('submit').click();
+            }
+        });
     </script>
 {% endblock %}

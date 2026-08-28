@@ -6,8 +6,8 @@ from django.shortcuts import get_object_or_404
 
 
 class LoginForm(AuthenticationForm):
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs['placeholder'] = field.label
             field.widget.attrs['class'] = 'form-control'
@@ -34,25 +34,18 @@ class UserChangeForm(ModelForm):
             'introduction',
         )
 
-    def __init__(self, username=None, email=None, introduction=None, *args, **kwargs):
+    def __init__(self, *args, username=None, email=None, introduction=None, **kwargs):
         kwargs.setdefault('label_suffix', '')
         if username:
-            user = get_object_or_404(get_user_model(), username=username)
-            super().__init__(instance=user, *args, **kwargs)
-        else:
-            super().__init__(*args, **kwargs)
-        # ユーザーの更新前情報をフォームに挿入
-        if username:
-            self.fields['username'].widget.attrs['value'] = username
-        if email:
-            self.fields['email'].widget.attrs['value'] = email
-        if introduction:
-            self.fields['introduction'].widget.attrs['value'] = introduction
+            # 既存ユーザーを instance として渡すことで ModelForm が初期値を自動設定する
+            kwargs['instance'] = get_object_or_404(get_user_model(), username=username)
+        super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs['placeholder'] = field.label
             field.widget.attrs['class'] = 'form-control'
 
     def update(self, user):
+        """変更があったフィールドのみ保存する。変更なしの場合は DB アクセスしない。"""
         fields = []
         if user.username != self.cleaned_data['username']:
             user.username = self.cleaned_data['username']
@@ -63,7 +56,8 @@ class UserChangeForm(ModelForm):
         if user.introduction != self.cleaned_data['introduction']:
             user.introduction = self.cleaned_data['introduction']
             fields.append('introduction')
-        user.save(update_fields=fields)
+        if fields:
+            user.save(update_fields=fields)
 
 
 class UserPasswordChangeForm(PasswordChangeForm):
@@ -74,11 +68,16 @@ class UserPasswordChangeForm(PasswordChangeForm):
             field.widget.attrs['class'] = 'form-control'
 
 
-class UpLoadProfileImgForm(forms.Form):
-    icon = forms.ImageField()
+class UploadProfileImgForm(forms.Form):
+    """プロフィールアイコンのアップロードフォーム。"""
+    icon = forms.ImageField(label="アイコン画像")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs['placeholder'] = field.label
             field.widget.attrs['class'] = 'form-control'
+
+
+# 後方互換エイリアス（既存コードが UpLoadProfileImgForm を参照している箇所に対応）
+UpLoadProfileImgForm = UploadProfileImgForm

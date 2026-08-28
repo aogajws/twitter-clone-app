@@ -1,0 +1,94 @@
+{% load static %}
+{# 投稿カードの共通テンプレート
+   必須コンテキスト変数:
+     post  - Post オブジェクト（liked_count, reply_count, repost_count を annotate 済み）
+     liked - ログインユーザーがいいね済みかどうかの bool
+#}
+<article class="row mt-2 border">
+    <div style="width: 100px;" class="col-2 my-1">
+        <a href="{% url 'accounts:profile' post.author.username %}">
+            {% if post.author.icon %}
+                <img class="align-self-center img-thumbnail img-fluid"
+                     src="{{ post.author.icon.url }}"
+                     alt="{{ post.author.username }}のアイコン">
+            {% else %}
+                <img class="align-self-center img-thumbnail img-fluid"
+                     src="{% static 'images/user_icon.png' %}"
+                     alt="{{ post.author.username }}のアイコン">
+            {% endif %}
+        </a>
+    </div>
+    <div class="col my-1">
+        <h4>
+            <a class="text-dark" href="{% url 'accounts:profile' post.author.username %}">
+                @{{ post.author }}
+            </a>
+        </h4>
+        <p class="text-break">{{ post.content | linebreaksbr | urlize }}</p>
+
+        {% if post.repost_parent %}
+            <div class="row my-2 border">
+                <div style="width: 100px;" class="col-2 my-1">
+                    <a href="{% url 'accounts:profile' post.repost_parent.author.username %}">
+                        {% if post.repost_parent.author.icon %}
+                            <img class="align-self-center img-thumbnail img-fluid"
+                                 src="{{ post.repost_parent.author.icon.url }}"
+                                 alt="{{ post.repost_parent.author.username }}のアイコン">
+                        {% else %}
+                            <img class="align-self-center img-thumbnail img-fluid"
+                                 src="{% static 'images/user_icon.png' %}"
+                                 alt="{{ post.repost_parent.author.username }}のアイコン">
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="col my-1">
+                    <h4>
+                        <a class="text-dark" href="{% url 'accounts:profile' post.repost_parent.author.username %}">
+                            @{{ post.repost_parent.author }}
+                        </a>
+                    </h4>
+                    <p class="text-break">{{ post.repost_parent.content | linebreaksbr | urlize }}</p>
+                    <a href="{% url 'post:status' post.repost_parent.pk %}" class="d-inline-block text-muted ms-2">
+                        <small>{{ post.repost_parent.created_at }}</small>
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        {# 返信ボタン #}
+        <a href="{% url 'post:reply' post.pk %}" class="d-inline-block">
+            <button type="button" class="btn btn-primary btn-sm">
+                返信{% if post.reply_count %} {{ post.reply_count }}{% endif %}
+            </button>
+        </a>
+
+        {# リツイートボタン #}
+        <a href="{% url 'post:repost' post.pk %}" class="d-inline-block">
+            <button type="button" class="btn btn-outline-success btn-sm">
+                リツイート{% if post.repost_count %} {{ post.repost_count }}{% endif %}
+            </button>
+        </a>
+
+        {# いいねボタン（POST フォーム） #}
+        <form method="post" action="{% url 'post:favorite' post.pk %}" class="d-inline-block">
+            {% csrf_token %}
+            <button type="submit"
+                    class="btn {% if liked %}btn-warning{% else %}btn-outline-warning{% endif %} btn-sm"
+                    aria-pressed="{% if liked %}true{% else %}false{% endif %}">
+                ☆いいね{% if post.liked_count %} {{ post.liked_count }}{% endif %}
+            </button>
+        </form>
+
+        {# 削除ボタン（投稿者本人のみ・POST フォーム） #}
+        {% if post.author == request.user %}
+            <form method="post" action="{% url 'post:delete' post.pk %}" class="d-inline-block">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">削除</button>
+            </form>
+        {% endif %}
+
+        <a href="{% url 'post:status' post.pk %}" class="d-inline-block text-muted ms-2">
+            <small>{{ post.created_at }}</small>
+        </a>
+    </div>
+</article>

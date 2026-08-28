@@ -31,75 +31,22 @@
                     <a href="{% url "accounts:icon" %}" type="submit" class="btn btn-info w-100 mt-1" id="icon_edit">アイコン変更</a>
                     <a href="{% url "accounts:password" %}" type="submit" class="btn btn-outline-info w-100 mt-1" id="password_edit">パスワード変更</a>
                 {% elif is_following %}
-                    <a href="{% url "accounts:remove" User.username %}" type="submit" class="btn btn-outline-primary" id="remove">フォロー解除</a>
+                    <form method="post" action="{% url 'accounts:remove' User.username %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary" id="remove">フォロー解除</button>
+                    </form>
                 {% else %}
-                    <a href="{% url "accounts:follow" User.username %}" type="submit" class="btn btn-primary" id="follow">フォローする</a>
+                    <form method="post" action="{% url 'accounts:follow' User.username %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" id="follow">フォローする</button>
+                    </form>
                 {% endif %}
             </div>
         </div>
         <div class="col-9 p-3" id="user_post">
             <h2>@{{ User.username }}さんのTweet一覧</h2>
             {% for post, liked in zip %}
-                <ul class="list-unstyled">
-                    <div class="row mt-2 border">
-                        <div style="width: 100px;" class="col-2 my-1">
-                            <a href={% url 'accounts:profile' post.author.username %}>
-                                {% if post.author.icon %}
-                                    <img class="align-self-center img-thumbnail" src="{{ post.author.icon.url }}" width="100" height="100">
-                                {% else %}
-                                    <img class="align-self-center img-thumbnail" src="{% static 'images/user_icon.png' %}" width="100" height="100">
-                                {% endif %}
-                            </a>
-                        </div>
-                        <div class="col my-1">
-                            <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.author.username %}>@{{ post.author }}</a></h4>
-                            <p class="text-break">
-                                {{ post.content | linebreaksbr | urlize }}
-                            </p>
-                            {% if post.repost_parent %}
-                                <div class="row my-2 border">
-                                    <div style="width: 100px;" class="col-2 my-1">
-                                        <a href={% url 'accounts:profile' post.repost_parent.author.username %}>
-                                            {% if post.repost_parent.author.icon %}
-                                                <img class="align-self-center img-thumbnail img-fluid" src="{{ post.repost_parent.author.icon.url }}">
-                                            {% else %}
-                                                <img class="align-self-center img-thumbnail img-fluid" src="{% static 'images/user_icon.png' %}">
-                                            {% endif %}
-                                        </a>
-                                    </div>
-                                    <div class="col my-1">
-                                        <h4 class=""><a class="text-dark" href={% url 'accounts:profile' post.repost_parent.author.username %}>@{{ post.repost_parent.author }}</a></h4>
-                                        <p class="text-break">
-                                            {{ post.repost_parent.content | linebreaksbr | urlize }}
-                                        </p>
-                                        <a href="{% url "post:status" post.repost_parent.pk %}" class="d-inline-block text-muted ms-2">
-                                            <h6 class="">{{ post.repost_parent.created_at }}</h6>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            <a href="{% url "post:reply" post.pk %}" class="d-inline-block">
-                                <button type="button" class="btn btn-primary btn-sm">返信{% if post.reply_count %}  {{ post.reply_count }}{% endif %}</button>
-                            </a>
-                            <a href="{% url "post:repost" post.pk %}" class="d-inline-block">
-                                <button type="button" class="btn btn-outline-success btn-sm">リツイート{% if post.repost_count %} {{ post.repost_count }}{% endif %}</button>
-                            </a>
-                            <a href="{% url "post:favorite" post.pk %}" class="d-inline-block">
-                                {% if liked %}<button type="button" class="btn btn-warning btn-sm">{% else %}<button type="button" class="btn btn-outline-warning btn-sm">{% endif %}
-                                    ☆いいね{% if post.liked_count %} {{ post.liked_count }}{% endif %}
-                                </button>
-                            </a>
-                            {% if post.author == request.user %}
-                                <a href="{% url "post:delete" post.pk %}" class="d-inline-block">
-                                    <button type="button" class="btn btn-outline-danger btn-sm">削除</button>
-                                </a>
-                            {% endif %}
-                            <a href="{% url "post:status" post.pk %}" class="d-inline-block text-muted ms-2">
-                                <h6 class="">{{ post.created_at }}</h6>
-                            </a>
-                        </div>
-                    </div>
-                </ul>
+                {% include "post/_post_card.html" with post=post liked=liked %}
             {% empty %}
                 <h5>Tweetがまだありません</h5>
             {% endfor %}

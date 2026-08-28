@@ -1,6 +1,9 @@
 from django import forms
 from .models import Post
 
+# ツイートの最大文字数
+POST_MAX_LENGTH = 280
+
 
 class PostCreationForm(forms.ModelForm):
     class Meta:
@@ -12,5 +15,4 @@ class PostCreationForm(forms.ModelForm):
         for field in self.fields.values():
             field.widget.attrs['placeholder'] = "いまどうしてる？"
             field.widget.attrs['class'] = 'form-control'
-            field.widget.attrs[
-                'onkeydown'] = "if(event.ctrlKey&&event.keyCode==13){document.getElementById('submit').click();return false};"
+            field.widget.attrs['maxlength'] = POST_MAX_LENGTH
